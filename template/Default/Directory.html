@@ -96,7 +96,12 @@
         .search-bar input::placeholder { color: #b8a88c; }
 
         /* ── 标签过滤 ── */
-        .filter-bar { max-width: var(--max-width); margin: 0 auto 1rem; padding: 0 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; position: relative; z-index: 1; }
+        .filter-row {
+            max-width: var(--max-width); margin: 0 auto 1rem;
+            padding: 0 1.5rem; display: flex; gap: 0.5rem;
+            flex-wrap: wrap; align-items: flex-start; position: relative; z-index: 1;
+        }
+        .filter-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; flex: 1; min-width: 0; }
         .filter-bar .filter-label { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; }
         .filter-chip {
             display: inline-block; padding: 0.3rem 0.85rem; border-radius: 100px; font-size: 0.85rem;
@@ -180,9 +185,7 @@
 
         /* ── 日历 ── */
         .calendar-wrap {
-            max-width: var(--max-width); margin: 0 auto 1rem;
-            padding: 0 1.5rem; display: flex; justify-content: flex-end;
-            position: relative; z-index: 1;
+            margin-left: auto; flex-shrink: 0;
         }
         .calendar-card {
             background: var(--card-bg); border: 1px solid var(--border);
@@ -215,6 +218,7 @@
             font-weight: 700; cursor: pointer;
         }
         .calendar-card .cal-day.has-post:hover { background: var(--accent); color: #fff; }
+        .calendar-card .cal-day.active-date { background: var(--accent); color: #fff; }
         .calendar-card .cal-day.today { outline: 1.5px solid var(--accent); outline-offset: -1px; }
         .calendar-card .cal-day.other-month { opacity: 0.3; }
         @media (max-width: 768px) { .calendar-wrap { justify-content: center; } }
@@ -295,22 +299,22 @@
         <input type="text" id="searchInput" placeholder="搜索文章标题、内容或标签…" autocomplete="off">
     </div>
 
-    <div class="filter-bar" id="filterBar">
-        <span class="filter-label">筛选：</span>
-        <span class="filter-chip active" data-tag="">全部</span>
-        {% for tag in all_tags %}
-        <span class="filter-chip" data-tag="{{ tag.name }}">{{ tag.name }}<span class="count">({{ tag.count }})</span></span>
-        {% endfor %}
+    <div class="filter-row">
+        <div class="filter-bar" id="filterBar">
+            <span class="filter-label">筛选：</span>
+            <span class="filter-chip active" data-tag="">全部</span>
+            {% for tag in all_tags %}
+            <span class="filter-chip" data-tag="{{ tag.name }}">{{ tag.name }}<span class="count">({{ tag.count }})</span></span>
+            {% endfor %}
+        </div>
+        <div class="calendar-wrap">
+            <div class="calendar-card" id="calendarCard"></div>
+        </div>
     </div>
 
     {% if active_tag %}
     <div class="filter-info">正在查看标签为「<strong>{{ active_tag }}</strong>」的文章 · <a href="{{ relative_root }}directory.html">显示全部</a></div>
     {% endif %}
-
-    <!-- 日历 -->
-    <div class="calendar-wrap">
-        <div class="calendar-card" id="calendarCard"></div>
-    </div>
 
     <div class="container" id="postList">
         {% if all_posts %}
@@ -318,7 +322,7 @@
             {% if post.show_month %}
             <div class="month-divider">{{ post.month_label }}</div>
             {% endif %}
-            <a href="{{ post.url }}" class="post-card" data-tags="{{ post.tags | join(',') }}" data-search-text="{{ post.title }} {{ post.excerpt }} {{ post.tags | join(' ') }}">
+            <a href="{{ post.url }}" class="post-card" data-date="{{ post.raw_date }}" data-tags="{{ post.tags | join(',') }}" data-search-text="{{ post.title }} {{ post.excerpt }} {{ post.tags | join(' ') }}">
                 <div class="post-meta">
                     <span>📅 {{ post.date }}</span>
                     {% if post.tags %}<span>·</span><span>{% for tag in post.tags %}🏷️ {{ tag }}{% if not loop.last %}, {% endif %}{% endfor %}</span>{% endif %}
@@ -401,14 +405,22 @@
             card.querySelectorAll('.cal-day.has-post').forEach(function(el){
                 el.addEventListener('click',function(){
                     var d=el.dataset.date;
-                    // 在搜索框填入日期，触发过滤
-                    var si=document.getElementById('searchInput');
-                    si.value=d; si.dispatchEvent(new Event('input'));
-                    // 重置标签过滤
+                    // 设置日期过滤
+                    dateFilter=d;
+                    // 高亮当前选中日期
+                    document.querySelectorAll('#calendarCard .cal-day.active-date').forEach(function(e){e.classList.remove('active-date')});
+                    el.classList.add('active-date');
+                    // 重置标签+搜索
                     document.querySelectorAll('#filterBar .filter-chip').forEach(function(c){c.classList.toggle('active',!c.dataset.tag)});
-                    // 滚动到第一个可见文章
-                    var firstVis=document.querySelector('#postList .post-card:not(.hidden)');
-                    if(firstVis)firstVis.scrollIntoView({behavior:'smooth',block:'start'});
+                    active='';
+                    var si=document.getElementById('searchInput');
+                    si.value='['+d+']'; si.dispatchEvent(new Event('input'));
+                    F();
+                    // 滚动到对应文章
+                    setTimeout(function(){
+                        var firstVis=document.querySelector('#postList .post-card:not(.hidden)');
+                        if(firstVis)firstVis.scrollIntoView({behavior:'smooth',block:'start'});
+                    },100);
                 });
             });
         }
@@ -416,7 +428,7 @@
     }();
 
     /* ═══════════ 搜索 + 标签过滤 ═══════════ */
-    !function(){const si=document.getElementById('searchInput'),pl=document.getElementById('postList'),fb=document.getElementById('filterBar'),cards=pl.querySelectorAll('.post-card'),dividers=pl.querySelectorAll('.month-divider');let active='';const p=new URLSearchParams(location.search),ut=p.get('tag');if(ut){active=ut;fb.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active',c.dataset.tag===ut))}function F(){const q=si.value.toLowerCase().trim();cards.forEach(c=>{const ts=c.dataset.tags||'',st=c.dataset.searchText||'',mq=!q||st.toLowerCase().includes(q),mt=!active||ts.split(',').includes(active);c.classList.toggle('hidden',!(mq&&mt))});var els=pl.children,vis=false;for(var i=els.length-1;i>=0;i--){var el=els[i];if(el.nodeType!==1)continue;if(el.classList.contains('month-divider')){el.classList.toggle('hidden',!vis);vis=false}else if(el.classList.contains('post-card')&&!el.classList.contains('hidden')){vis=true}}}si.addEventListener('input',F);fb.addEventListener('click',e=>{const ch=e.target.closest('.filter-chip');if(!ch)return;const tg=ch.dataset.tag;fb.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));ch.classList.add('active');const u=new URL(location);tg?u.searchParams.set('tag',tg):u.searchParams.delete('tag');history.replaceState({},'',u);active=tg;F()});F()}();
+    !function(){const si=document.getElementById('searchInput'),pl=document.getElementById('postList'),fb=document.getElementById('filterBar'),cards=pl.querySelectorAll('.post-card'),dividers=pl.querySelectorAll('.month-divider');let active='',dateFilter='';const p=new URLSearchParams(location.search),ut=p.get('tag');if(ut){active=ut;fb.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active',c.dataset.tag===ut))}function F(){const q=si.value.toLowerCase().trim();cards.forEach(c=>{const ts=c.dataset.tags||'',st=c.dataset.searchText||'',mq=!q||st.toLowerCase().includes(q),mt=!active||ts.split(',').includes(active),md=!dateFilter||c.dataset.date===dateFilter;c.classList.toggle('hidden',!(mq&&mt&&md))});var els=pl.children,vis=false;for(var i=els.length-1;i>=0;i--){var el=els[i];if(el.nodeType!==1)continue;if(el.classList.contains('month-divider')){el.classList.toggle('hidden',!vis);vis=false}else if(el.classList.contains('post-card')&&!el.classList.contains('hidden')){vis=true}}}function clearDate(){dateFilter='';si.value='';si.dispatchEvent(new Event('input'));document.querySelectorAll('#calendarCard .cal-day.active-date').forEach(function(e){e.classList.remove('active-date')})}si.addEventListener('input',function(){if(si.value.trim())dateFilter='';F()});fb.addEventListener('click',e=>{const ch=e.target.closest('.filter-chip');if(!ch)return;const tg=ch.dataset.tag;fb.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));ch.classList.add('active');const u=new URL(location);tg?u.searchParams.set('tag',tg):u.searchParams.delete('tag');history.replaceState({},'',u);active=tg;F()});F()}();
 
     /* ═══════════ 返回顶部 ═══════════ */
     !function(){const b=document.getElementById('backToTop');addEventListener('scroll',()=>b.classList.toggle('visible',scrollY>400));b.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}))}();

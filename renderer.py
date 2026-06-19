@@ -653,9 +653,12 @@ class BlogRenderer:
     def _summary(self, post: dict) -> dict:
         """生成文章摘要数据。"""
         meta = post["metadata"]
+        m = re.match(r'(\d{4})\D+(\d{1,2})\D+(\d{1,2})', meta["time"])
+        raw_date = f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}" if m else ""
         return {
             "title": meta["title"],
             "date": self._format_date(meta["time"]),
+            "raw_date": raw_date,                # YYYY-MM-DD，日历筛选用
             "url": post.get("url", f"posts/{post['slug']}.html"),
             "tags": meta.get("tags", []),
             "excerpt": meta.get("excerpt", ""),
