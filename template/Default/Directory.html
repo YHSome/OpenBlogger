@@ -178,6 +178,47 @@
             .back-to-top { bottom: 1.2rem; right: 1.2rem; width: 38px; height: 38px; }
         }
 
+        /* ── 日历 ── */
+        .calendar-wrap {
+            max-width: var(--max-width); margin: 0 auto 1rem;
+            padding: 0 1.5rem; display: flex; justify-content: flex-end;
+            position: relative; z-index: 1;
+        }
+        .calendar-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 0.75rem 1rem;
+            box-shadow: var(--shadow); font-size: 0.85rem;
+            user-select: none; transition: background 0.4s, border 0.4s;
+        }
+        .calendar-card .cal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.5rem; font-weight: 700; color: var(--text);
+        }
+        .calendar-card .cal-header button {
+            background: none; border: none; color: var(--accent);
+            cursor: pointer; font-size: 1rem; padding: 0 0.3rem;
+        }
+        .calendar-card .cal-header button:hover { color: var(--accent-hover); }
+        .calendar-card .cal-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 2px; text-align: center;
+        }
+        .calendar-card .cal-day-hdr {
+            font-size: 0.7rem; color: var(--text-secondary); padding: 2px 0;
+        }
+        .calendar-card .cal-day {
+            padding: 3px 0; border-radius: 4px; cursor: default;
+            color: var(--text-secondary);
+        }
+        .calendar-card .cal-day.has-post {
+            background: var(--tag-bg); color: var(--accent);
+            font-weight: 700; cursor: pointer;
+        }
+        .calendar-card .cal-day.has-post:hover { background: var(--accent); color: #fff; }
+        .calendar-card .cal-day.today { outline: 1.5px solid var(--accent); outline-offset: -1px; }
+        .calendar-card .cal-day.other-month { opacity: 0.3; }
+        @media (max-width: 768px) { .calendar-wrap { justify-content: center; } }
+
         /* ═══════════ 页面转场 ═══════════ */
         body.page-exiting .navbar     { animation: exitUp   0.32s cubic-bezier(0.55,0,1,0.45) forwards; }
         body.page-exiting .page-header{ animation: exitUp   0.30s 0.03s cubic-bezier(0.55,0,1,0.45) forwards; }
@@ -266,6 +307,11 @@
     <div class="filter-info">正在查看标签为「<strong>{{ active_tag }}</strong>」的文章 · <a href="{{ relative_root }}directory.html">显示全部</a></div>
     {% endif %}
 
+    <!-- 日历 -->
+    <div class="calendar-wrap">
+        <div class="calendar-card" id="calendarCard"></div>
+    </div>
+
     <div class="container" id="postList">
         {% if all_posts %}
             {% for post in all_posts %}
@@ -306,6 +352,68 @@
 
     /* ═══════════ 深色模式 ═══════════ */
     !function(){const t=document.getElementById('themeToggle'),b=document.documentElement,s=localStorage.getItem('blog-theme');if(s==='dark'||(!s&&matchMedia('(prefers-color-scheme:dark)').matches)){b.classList.add('dark');t.textContent='☀️'}t.addEventListener('click',()=>{const d=b.classList.toggle('dark');t.textContent=d?'☀️':'🌙';localStorage.setItem('blog-theme',d?'dark':'light')})}();
+
+    /* ═══════════ 日历 ─────────────────────────────── */
+    !function(){
+        var dates={{ post_dates | tojson }};  // ["2023-04-09","2023-04-12",...]
+        var hasPost={}; dates.forEach(function(d){hasPost[d]=1});
+        var card=document.getElementById('calendarCard');
+        if(!card||!dates.length)return;
+
+        var now=new Date();
+        var curY=now.getFullYear(),curM=now.getMonth();  // 0-based
+        var today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+        var dayNames=['日','一','二','三','四','五','六'];
+
+        function build(y,m){
+            var hdr='<button id="calPrev">◀</button>'+y+'年'+(m+1)+'月<button id="calNext">▶</button>';
+            var grid='<div class="cal-grid">';
+            dayNames.forEach(function(d){grid+='<div class="cal-day-hdr">'+d+'</div>'});
+            var first=new Date(y,m,1).getDay();
+            var daysIn=new Date(y,m+1,0).getDate();
+            var prevDays=new Date(y,m,0).getDate();
+            // 上月尾
+            for(var i=first-1;i>=0;i--){
+                grid+='<div class="cal-day other-month">'+(prevDays-i)+'</div>';
+            }
+            // 本月
+            for(var d=1;d<=daysIn;d++){
+                var key=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+                var cls='cal-day';
+                if(hasPost[key])cls+=' has-post';
+                if(key===today)cls+=' today';
+                grid+='<div class="'+cls+'" data-date="'+key+'">'+d+'</div>';
+            }
+            // 下月头
+            var remaining=(7-(first+daysIn)%7)%7;
+            for(var d=1;d<=remaining;d++){
+                grid+='<div class="cal-day other-month">'+d+'</div>';
+            }
+            grid+='</div>';
+            card.innerHTML='<div class="cal-header">'+hdr+'</div>'+grid;
+            document.getElementById('calPrev').addEventListener('click',function(){
+                curM--; if(curM<0){curM=11;curY--;} build(curY,curM);
+            });
+            document.getElementById('calNext').addEventListener('click',function(){
+                curM++; if(curM>11){curM=0;curY++;} build(curY,curM);
+            });
+            // 点击日期 → 滚动定位
+            card.querySelectorAll('.cal-day.has-post').forEach(function(el){
+                el.addEventListener('click',function(){
+                    var d=el.dataset.date;
+                    // 在搜索框填入日期，触发过滤
+                    var si=document.getElementById('searchInput');
+                    si.value=d; si.dispatchEvent(new Event('input'));
+                    // 重置标签过滤
+                    document.querySelectorAll('#filterBar .filter-chip').forEach(function(c){c.classList.toggle('active',!c.dataset.tag)});
+                    // 滚动到第一个可见文章
+                    var firstVis=document.querySelector('#postList .post-card:not(.hidden)');
+                    if(firstVis)firstVis.scrollIntoView({behavior:'smooth',block:'start'});
+                });
+            });
+        }
+        build(curY,curM);
+    }();
 
     /* ═══════════ 搜索 + 标签过滤 ═══════════ */
     !function(){const si=document.getElementById('searchInput'),pl=document.getElementById('postList'),fb=document.getElementById('filterBar'),cards=pl.querySelectorAll('.post-card'),dividers=pl.querySelectorAll('.month-divider');let active='';const p=new URLSearchParams(location.search),ut=p.get('tag');if(ut){active=ut;fb.querySelectorAll('.filter-chip').forEach(c=>c.classList.toggle('active',c.dataset.tag===ut))}function F(){const q=si.value.toLowerCase().trim();cards.forEach(c=>{const ts=c.dataset.tags||'',st=c.dataset.searchText||'',mq=!q||st.toLowerCase().includes(q),mt=!active||ts.split(',').includes(active);c.classList.toggle('hidden',!(mq&&mt))});var els=pl.children,vis=false;for(var i=els.length-1;i>=0;i--){var el=els[i];if(el.nodeType!==1)continue;if(el.classList.contains('month-divider')){el.classList.toggle('hidden',!vis);vis=false}else if(el.classList.contains('post-card')&&!el.classList.contains('hidden')){vis=true}}}si.addEventListener('input',F);fb.addEventListener('click',e=>{const ch=e.target.closest('.filter-chip');if(!ch)return;const tg=ch.dataset.tag;fb.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));ch.classList.add('active');const u=new URL(location);tg?u.searchParams.set('tag',tg):u.searchParams.delete('tag');history.replaceState({},'',u);active=tg;F()});F()}();

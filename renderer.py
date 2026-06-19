@@ -499,11 +499,18 @@ class BlogRenderer:
             s["show_month"] = (month_label != last_month)   # 月份变化时显示分隔
             last_month = month_label
             posts.append(s)
+        # 收集有文章的日期（"YYYY-MM-DD" 集合，日历用）
+        post_dates = sorted(set(
+            f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}"
+            for p in self.posts
+            if (m := re.match(r'(\d{4})\D+(\d{1,2})\D+(\d{1,2})', p["metadata"]["time"]))
+        ))
         return {
             "site_title": self.config["site_title"],
             "all_posts": posts,
             "all_tags": all_tags,
             "active_tag": active_tag,
+            "post_dates": post_dates,              # 日历高亮数据
             "current_year": datetime.now().year,
             "relative_root": "",                  # 目录页在根目录
         }
