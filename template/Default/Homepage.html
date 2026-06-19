@@ -544,6 +544,7 @@
     (function(){
         document.body.classList.add('page-entering');
         addEventListener('load',function(){setTimeout(function(){document.body.classList.remove('page-entering')},700)});
+        addEventListener('pageshow',function(e){if(e.persisted){document.body.classList.remove('page-exiting','page-entering');document.querySelectorAll('*').forEach(function(el){el.style.animation='none';el.offsetHeight;el.style.animation=''})}});
         if(location.protocol==='file:')return;  // file:// 下不做转场动画
         document.addEventListener('click',function(e){
             var a=e.target.closest('a');
