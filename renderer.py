@@ -374,7 +374,12 @@ class BlogRenderer:
 
         # Step 3: 按时间排序（最新在前）
         # 按日期排序（解析为元组避免字符串比较 "10" < "4" 的问题）
-        self.posts.sort(key=lambda p: _parse_date_tuple(p["metadata"]["time"]), reverse=True)
+        # 按日期排序 → 同日按源文件修改时间倒序（晚写的排前面）
+        self.posts.sort(
+            key=lambda p: (_parse_date_tuple(p["metadata"]["time"]),
+                           (PROJECT_ROOT / p["source_file"]).stat().st_mtime if p.get("source_file") else 0),
+            reverse=True,
+        )
 
         # Step 4: 渲染文章页
         RENDERED_DIR.mkdir(parents=True, exist_ok=True)
