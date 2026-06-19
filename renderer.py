@@ -216,6 +216,8 @@ class BlogRenderer:
         # 4) 标签 → 列表
         raw_tags = metadata.get("tag", "")
         metadata["tags"] = [t.strip() for t in re.split(r"[,，、\s]+", raw_tags) if t.strip()]
+        if not metadata["tags"]:
+            metadata["tags"] = ["未分类"]           # 无标签时默认"未分类"
 
         # 5) 摘要
         metadata["excerpt"] = BlogRenderer._make_excerpt(body_md)
