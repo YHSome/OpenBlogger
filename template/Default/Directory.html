@@ -110,8 +110,23 @@
         }
         .filter-chip:hover, .filter-chip.active { border-color: var(--accent); color: var(--accent); background: var(--tag-bg); }
         .filter-chip .count { font-size: 0.75rem; opacity: 0.7; margin-left: 0.15rem; }
-        .filter-info { max-width: var(--max-width); margin: 0 auto 1rem; padding: 0 1.5rem; font-size: 0.9rem; color: var(--text-secondary); position: relative; z-index: 1; }
+        .filter-info { max-width: var(--max-width); margin: 0 auto 0.5rem; padding: 0 1.5rem; font-size: 0.9rem; color: var(--text-secondary); position: relative; z-index: 1; }
         .filter-info a { color: var(--accent); text-decoration: none; }
+        .date-badge {
+            display: none; align-items: center; gap: 0.4rem;
+            max-width: var(--max-width); margin: 0 auto 0.5rem; padding: 0 1.5rem;
+            font-size: 0.85rem; color: var(--accent); position: relative; z-index: 1;
+        }
+        .date-badge.visible { display: flex; }
+        .date-badge .badge-text {
+            background: var(--tag-bg); padding: 0.25rem 0.75rem;
+            border-radius: 100px; font-weight: 600;
+        }
+        .date-badge .badge-clear {
+            cursor: pointer; color: var(--text-secondary);
+            font-size: 1rem; transition: color 0.2s;
+        }
+        .date-badge .badge-clear:hover { color: #c44; }
 
         /* ── 文章列表 ── */
         .container { max-width: var(--max-width); margin: 0 auto; padding: 0 1.5rem 2rem; flex: 1; width: 100%; position: relative; z-index: 1; }
@@ -316,6 +331,11 @@
     <div class="filter-info">正在查看标签为「<strong>{{ active_tag }}</strong>」的文章 · <a href="{{ relative_root }}directory.html">显示全部</a></div>
     {% endif %}
 
+    <div class="date-badge" id="dateBadge">
+        <span class="badge-text" id="dateBadgeText"></span>
+        <span class="badge-clear" id="dateBadgeClear" title="清除日期筛选">✕</span>
+    </div>
+
     <div class="container" id="postList">
         {% if all_posts %}
             {% for post in all_posts %}
@@ -369,6 +389,17 @@
         var today=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
         var dayNames=['日','一','二','三','四','五','六'];
 
+        function showDateBadge(d){
+            var badge=document.getElementById('dateBadge');
+            var text=document.getElementById('dateBadgeText');
+            text.textContent=d; badge.classList.add('visible');
+        }
+        document.getElementById('dateBadgeClear').addEventListener('click',function(){
+            dateFilter=''; document.getElementById('dateBadge').classList.remove('visible');
+            document.querySelectorAll('#calendarCard .cal-day.active-date').forEach(function(e){e.classList.remove('active-date')});
+            F();
+        });
+
         function build(y,m){
             var hdr='<button id="calPrev">◀</button>'+y+'年'+(m+1)+'月<button id="calNext">▶</button>';
             var grid='<div class="cal-grid">';
@@ -407,14 +438,13 @@
                     var d=el.dataset.date;
                     // 设置日期过滤
                     dateFilter=d;
-                    // 高亮当前选中日期
+                    // 高亮 + 显示日期标签
                     document.querySelectorAll('#calendarCard .cal-day.active-date').forEach(function(e){e.classList.remove('active-date')});
                     el.classList.add('active-date');
-                    // 重置标签+搜索
+                    showDateBadge(d);
+                    // 重置标签
                     document.querySelectorAll('#filterBar .filter-chip').forEach(function(c){c.classList.toggle('active',!c.dataset.tag)});
                     active='';
-                    var si=document.getElementById('searchInput');
-                    si.value='['+d+']'; si.dispatchEvent(new Event('input'));
                     F();
                     // 滚动到对应文章
                     setTimeout(function(){
