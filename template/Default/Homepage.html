@@ -277,37 +277,6 @@
             100% { left: 110%; opacity: 0; }
         }
 
-        /* ── 项目展示卡片 ── */
-        .project-showcase { margin-top: 0.5rem; }
-        .project-card-sm {
-            background: var(--card-bg); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 1.15rem 1.4rem; margin-bottom: 0.7rem;
-            box-shadow: var(--shadow); text-decoration: none; color: var(--text);
-            display: flex; gap: 1rem; align-items: center;
-            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
-            position: relative; overflow: hidden;
-        }
-        .project-card-sm::after {
-            content: ''; position: absolute; inset: 0;
-            background: var(--gradient-accent); opacity: 0;
-            transition: opacity 0.4s; z-index: 0;
-        }
-        .project-card-sm:hover::after { opacity: 0.03; }
-        .project-card-sm::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0; z-index: 1;
-            width: 4px; background: var(--gradient-accent);
-            border-radius: 0 3px 3px 0;
-            transform: scaleY(0); transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
-        }
-        .project-card-sm:hover::before { transform: scaleY(1); }
-        .project-card-sm:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); border-color: var(--accent); }
-        .project-card-sm .sm-icon { font-size: 1.5rem; flex-shrink: 0; width: 36px; text-align: center; position: relative; z-index: 1; }
-        .project-card-sm .sm-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
-        .project-card-sm .sm-name { font-size: 1.05rem; font-weight: 700; }
-        .project-card-sm:hover .sm-name { color: var(--accent); }
-        .project-card-sm .sm-desc { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.15rem; }
-        @media (max-width: 768px) { .project-card-sm { padding: 0.9rem 1rem; } }
-
         /* ── 响应式：窄屏还原单栏 ── */
         @media (max-width: 768px) {
             :root { --content-width: 100%; --sidebar-width: 100%; --danmaku-width: 100%; }
@@ -319,9 +288,8 @@
             .theme-toggle { width: 30px; height: 30px; font-size: 0.9rem; }
             .main-layout { flex-direction: column; padding: 0 0.75rem 1.5rem; gap: 1.5rem; }
             .sidebar { flex: auto; order: 2; }
-            .danmaku-col { flex: auto; order: 3; }
-            .sidebar-sticky, .danmaku-sticky { position: static; }
-            .danmaku-col .danmaku-widget { max-height: 200px; }
+            .proj-col { flex: auto; order: 3; }
+            .sidebar-sticky, .proj-sticky { position: static; }
             .sidebar-widget { padding: 0.8rem 1rem; }
             .hero { padding: 3rem 1rem 1.5rem; }
             .hero h1 { font-size: 1.8rem; }
@@ -336,56 +304,58 @@
             .footer-stats { font-size: 0.78rem; gap: 0.4rem; }
         }
 
-        /* ── 弹幕评论栏（右侧第三列） ── */
-        .danmaku-col {
-            flex: 0 0 var(--danmaku-width);
-            display: flex; flex-direction: column; gap: 1.5rem;
-        }
-        .danmaku-col .danmaku-sticky {
-            position: sticky; top: calc(56px + 1.5rem);
-            display: flex; flex-direction: column; gap: 1.5rem;
-        }
-        .danmaku-col .danmaku-widget {
-            background: var(--card-bg); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 1.25rem 1.25rem;
-            box-shadow: var(--shadow); transition: background 0.4s, border 0.4s;
-            max-height: 360px;
-            display: flex; flex-direction: column; overflow: hidden;
-        }
-        .danmaku-col .widget-title {
-            font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);
-            text-transform: uppercase; letter-spacing: 0.08em;
-            margin-bottom: 0.6rem; padding-bottom: 0.4rem;
-            border-bottom: 1.5px solid var(--border); text-align: center;
-            transition: border 0.4s;
-        }
-        .danmaku-col .danmaku-track {
+        /* ── 侧栏内嵌弹幕 ── */
+        .sidebar-danmaku { max-height: 280px; display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-danmaku-track {
             flex: 1; overflow: hidden; position: relative;
             mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
         }
-        .danmaku-col .danmaku-scroll {
-            animation: danmakuFlow 22s linear infinite;
+        .sidebar-danmaku-scroll { animation: danmakuFlow 22s linear infinite; }
+        .sidebar-danmaku-scroll:hover { animation-play-state: paused; }
+        .sidebar-danmaku .danmaku-item {
+            padding: 0.4rem 0.5rem; margin-bottom: 0.35rem;
+            background: var(--tag-bg); border-radius: 5px;
+            font-size: 0.72rem; line-height: 1.4; color: var(--text-secondary);
         }
-        .danmaku-col .danmaku-scroll:hover { animation-play-state: paused; }
-        .danmaku-col .danmaku-item {
-            padding: 0.5rem 0.6rem; margin-bottom: 0.45rem;
-            background: var(--tag-bg); border-radius: 6px;
-            font-size: 0.75rem; line-height: 1.5; color: var(--text-secondary);
-            transition: background 0.3s;
-        }
-        .danmaku-col .danmaku-item .dm-author { font-weight: 600; color: var(--accent); font-size: 0.7rem; margin-bottom: 0.1rem; }
-        .danmaku-col .danmaku-item .dm-body { word-break: break-all; }
+        .sidebar-danmaku .danmaku-item .dm-author { font-weight: 600; color: var(--accent); font-size: 0.68rem; margin-bottom: 0.06rem; }
+        .sidebar-danmaku .danmaku-item .dm-body { word-break: break-all; }
         @keyframes danmakuFlow {
             0% { transform: translateY(0); }
             100% { transform: translateY(-50%); }
         }
+
+        /* ── 右侧项目栏 ── */
+        .proj-col {
+            flex: 0 0 var(--danmaku-width);
+            display: flex; flex-direction: column; gap: 1rem;
+        }
+        .proj-sticky {
+            position: sticky; top: calc(56px + 1.5rem);
+            display: flex; flex-direction: column; gap: 0.6rem;
+        }
+        .proj-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 0.85rem 1.1rem;
+            box-shadow: var(--shadow); text-decoration: none; color: var(--text);
+            display: block; position: relative; overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+        }
+        .proj-card::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 3px; background: var(--gradient-accent);
+            transform: scaleY(0); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+        }
+        .proj-card:hover::before { transform: scaleY(1); }
+        .proj-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); border-color: var(--accent); }
+        .proj-card .proj-name { font-size: 0.92rem; font-weight: 700; }
+        .proj-card:hover .proj-name { color: var(--accent); }
 
         /* ═══════════ 页面转场 ═══════════ */
         body.page-exiting .navbar     { animation: exitUp   0.32s cubic-bezier(0.55,0,1,0.45) forwards; }
         body.page-exiting .hero       { animation: exitUp   0.30s 0.03s cubic-bezier(0.55,0,1,0.45) forwards; }
         body.page-exiting .search-bar { animation: exitLeft 0.28s 0.05s cubic-bezier(0.55,0,1,0.45) forwards; }
         body.page-exiting .sidebar    { animation: exitLeft  0.28s 0.07s cubic-bezier(0.55,0,1,0.45) forwards; }
-        body.page-exiting .danmaku-col{ animation: exitRight 0.28s 0.07s cubic-bezier(0.55,0,1,0.45) forwards; }
+        body.page-exiting .proj-col{ animation: exitRight 0.28s 0.07s cubic-bezier(0.55,0,1,0.45) forwards; }
         body.page-exiting .content-main{animation: exitDown  0.30s 0.09s cubic-bezier(0.55,0,1,0.45) forwards; }
         body.page-exiting .footer     { animation: exitDown 0.28s 0.09s cubic-bezier(0.55,0,1,0.45) forwards; }
         body.page-exiting .back-to-top{ animation: exitDown 0.20s cubic-bezier(0.55,0,1,0.45) forwards; }
@@ -401,7 +371,9 @@
         body.page-entering .hero       { animation: enterDown  0.50s 0.06s cubic-bezier(0.22,0.61,0.36,1) both; }
         body.page-entering .search-bar { animation: enterLeft  0.42s 0.10s cubic-bezier(0.22,0.61,0.36,1) both; }
         body.page-entering .sidebar    { animation: enterLeft  0.50s 0.14s cubic-bezier(0.22,0.61,0.36,1) both; }
-        body.page-entering .danmaku-col{animation: enterRight 0.50s 0.14s cubic-bezier(0.22,0.61,0.36,1) both; }
+        body.page-entering .proj-col{animation: enterRight 0.50s 0.14s cubic-bezier(0.22,0.61,0.36,1) both; }
+        body.page-entering .proj-card:nth-child(odd)  { animation: enterRight 0.45s 0.18s cubic-bezier(0.22,0.61,0.36,1) both; }
+        body.page-entering .proj-card:nth-child(even) { animation: enterLeft  0.45s 0.20s cubic-bezier(0.22,0.61,0.36,1) both; }
         body.page-entering .content-main{animation: enterUp    0.52s 0.18s cubic-bezier(0.22,0.61,0.36,1) both; }
         body.page-entering .post-card:nth-child(odd)  { animation: enterLeft  0.50s 0.20s cubic-bezier(0.22,0.61,0.36,1) both; }
         body.page-entering .post-card:nth-child(even) { animation: enterRight 0.50s 0.22s cubic-bezier(0.22,0.61,0.36,1) both; }
@@ -495,6 +467,17 @@
                     </div>
                 </div>
                 {% endif %}
+                {% if viewer_comment and max_page_id > 0 %}
+                <!-- 精选发言 (侧栏) -->
+                <div class="sidebar-widget sidebar-danmaku" id="danmakuBar" data-max-pid="{{ max_page_id }}">
+                    <div class="widget-title">💬 精选发言</div>
+                    <div class="sidebar-danmaku-track">
+                        <div class="sidebar-danmaku-scroll" id="danmakuScroll">
+                            <div class="danmaku-item"><div class="dm-author">加载中…</div></div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </aside>
 
@@ -517,35 +500,18 @@
             {% else %}
                 <div class="empty-state">还没有文章，开始写第一篇吧 ✍️</div>
             {% endif %}
-
-            {% if project_posts %}
-            <div class="project-showcase">
-                <div class="section-title">🚀 项目</div>
-                {% for proj in project_posts %}
-                <a href="{{ proj.url }}" class="project-card-sm">
-                    <div class="sm-icon">📦</div>
-                    <div class="sm-info">
-                        <div class="sm-name">{{ proj.title }}</div>
-                        {% if proj.excerpt %}<div class="sm-desc">{{ proj.excerpt }}</div>{% endif %}
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
-            {% endif %}
         </main>
 
-        {% if viewer_comment and max_page_id > 0 %}
-        <!-- 右栏：弹幕评论 -->
-        <aside class="danmaku-col" id="danmakuBar" data-max-pid="{{ max_page_id }}">
-            <div class="danmaku-sticky">
-                <div class="danmaku-widget">
-                    <div class="widget-title">💬 精选发言</div>
-                    <div class="danmaku-track">
-                        <div class="danmaku-scroll" id="danmakuScroll">
-                            <div class="danmaku-item"><div class="dm-author">加载中…</div></div>
-                        </div>
-                    </div>
-                </div>
+        {% if project_posts %}
+        <!-- 右栏：项目展示 -->
+        <aside class="proj-col">
+            <div class="proj-sticky">
+                <div class="section-title">🚀 项目</div>
+                {% for proj in project_posts %}
+                <a href="{{ proj.url }}" class="proj-card">
+                    <div class="proj-name">{{ proj.title }}</div>
+                </a>
+                {% endfor %}
             </div>
         </aside>
         {% endif %}
