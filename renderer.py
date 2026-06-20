@@ -409,8 +409,7 @@ class BlogRenderer:
             ("index.html", "Homepage.html", self._build_homepage_context()),
             ("directory.html", "Directory.html", self._build_directory_context()),
             ("tags.html", "Tag.html", self._build_tags_context()),
-            ("projects.html", "Projects.html", self._build_projects_context()),
-            ("links.html", "Links.html", self._build_links_context()),
+            ("resources.html", "Resources.html", self._build_resources_context()),
         ]
 
         for filename, template, context in list_pages:
@@ -549,20 +548,11 @@ class BlogRenderer:
             "relative_root": "",                  # 标签页在根目录
         }
 
-    def _build_projects_context(self) -> dict:
-        """构建项目展示页上下文（GitHub 仓库列表）。"""
-        projects = self._load_projects()
+    def _build_resources_context(self) -> dict:
+        """构建资源页上下文（GitHub 项目 + 友链工具合并）。"""
         return {
             "site_title": self.config["site_title"],
-            "projects": projects,
-            "current_year": datetime.now().year,
-            "relative_root": "",
-        }
-
-    def _build_links_context(self) -> dict:
-        """构建友情链接页面上下文。"""
-        return {
-            "site_title": self.config["site_title"],
+            "projects": self._load_projects(),
             "link_sections": [
                 {
                     "title": "🎮 在线小工具",
