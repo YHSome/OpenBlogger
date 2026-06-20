@@ -593,6 +593,12 @@ class BlogRenderer:
             "site_title": self.config["site_title"],
             "friend_link_sections": [
                 {
+                    "title": "👥 好友链接",
+                    "links": [
+                        {"name": "MKrari", "desc": "个人博客", "icon": "<img src=\"https://www.google.com/s2/favicons?domain=mkrari.cn&sz=32\" style=\"width:20px;height:20px;border-radius:3px\">", "url": "https://mkrari.cn/"},
+                    ],
+                },
+                {
                     "title": "🛠️ 开发工具",
                     "links": [
                         {"name": "GitHub", "desc": "全球最大的代码托管平台", "icon": "🐙", "url": "https://github.com"},

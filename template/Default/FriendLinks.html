@@ -186,7 +186,7 @@
         <div class="section-title">{{ section.title }}</div>
         {% for link in section.links %}
         <a href="{{ link.url }}" class="fl-card" target="_blank" rel="noopener">
-            <div class="fl-icon">{{ link.icon }}</div>
+            <div class="fl-icon">{{ link.icon | safe }}</div>
             <div class="fl-info">
                 <span class="fl-name">{{ link.name }}</span>
                 {% if link.desc %}<div class="fl-desc">{{ link.desc }}</div>{% endif %}
