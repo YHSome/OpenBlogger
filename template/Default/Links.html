@@ -113,12 +113,21 @@
         .footer { text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 0.85rem; border-top: 1px solid var(--border); margin-top: auto; position: relative; z-index: 1; transition: border 0.4s; }
         .footer span { color: var(--accent); }
 
-        @media (max-width: 600px) {
-            .page-header h1 { font-size: 1.6rem; }
-            .link-card { padding: 1rem 1.25rem; }
-            .nav-links { gap: 1rem; }
-            .navbar { padding: 0 1.25rem; }
-            .back-to-top { bottom: 1.2rem; right: 1.2rem; width: 38px; height: 38px; }
+        @media (max-width: 768px) {
+            body { font-size: 0.95rem; }
+            .navbar { padding: 0 0.8rem; }
+            .navbar .brand { font-size: 1.1rem; }
+            .nav-links { gap: 0.6rem; }
+            .nav-links a { font-size: 0.85rem; }
+            .theme-toggle { width: 30px; height: 30px; font-size: 0.9rem; }
+            .page-header h1 { font-size: 1.5rem; }
+            .page-header { padding: 1.5rem 1rem 0.8rem; }
+            .container { padding: 0 0.75rem 1.5rem; }
+            .link-card { padding: 0.85rem 1rem; }
+            .link-card .link-name { font-size: 1rem; }
+            .link-card .link-desc { font-size: 0.82rem; }
+            .back-to-top { bottom: 1rem; right: 1rem; width: 36px; height: 36px; }
+            .footer { padding: 1.2rem 1rem; font-size: 0.78rem; }
         }
 
         /* ═══════════ 页面转场 ═══════════ */

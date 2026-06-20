@@ -222,15 +222,32 @@
 
         @media (max-width: 768px) {
             :root { --content-width: 100%; --sidebar-width: 100%; --danmaku-width: 100%; }
-            .article-header h1 { font-size: 1.6rem; }
-            .prose { font-size: 1rem; }
+            body { font-size: 0.95rem; }
+            .navbar { padding: 0 0.8rem; }
+            .navbar .brand { font-size: 1.1rem; }
+            .nav-links { gap: 0.6rem; }
+            .nav-links a { font-size: 0.85rem; }
+            .theme-toggle { width: 30px; height: 30px; font-size: 0.9rem; }
+            .article-header { padding: 2rem 1rem 1rem; }
+            .article-header h1 { font-size: 1.4rem; line-height: 1.35; }
+            .article-meta { font-size: 0.8rem; gap: 0.5rem; }
+            .prose { font-size: 0.95rem; line-height: 1.75; }
+            .prose h2 { font-size: 1.25rem; }
+            .prose h3 { font-size: 1.1rem; }
             .article-nav { flex-direction: column; }
-            .nav-links { gap: 0.8rem; }
-            .back-to-top { bottom: 1.2rem; right: 1.2rem; width: 38px; height: 38px; }
-            .main-layout { flex-direction: column; padding: 0 1.25rem 1rem; gap: 1.5rem; }
+            .article-nav a { padding: 0.8rem 1rem; }
+            .article-nav .nav-title { font-size: 0.88rem; }
+            .back-to-top { bottom: 1rem; right: 1rem; width: 36px; height: 36px; }
+            .main-layout { flex-direction: column; padding: 0 0.75rem 0.8rem; gap: 1rem; }
             .sidebar, .danmaku-col { flex: auto; }
             .sidebar-sticky, .danmaku-sticky { position: static; }
-            .danmaku-col .danmaku-widget { max-height: 250px; }
+            .sidebar-widget { padding: 0.8rem 1rem; }
+            .danmaku-col .danmaku-widget { max-height: 200px; }
+            .comment-section { padding: 0.8rem 0 0; }
+            .comment-form input, .comment-form textarea { font-size: 0.9rem; padding: 0.5rem 0.8rem; }
+            .comment-form button { padding: 0.5rem 1.2rem; font-size: 0.9rem; }
+            .footer { padding: 1.2rem 1rem; font-size: 0.78rem; }
+            .footer-stats { font-size: 0.78rem; gap: 0.4rem; }
         }
 
         /* ── 双栏/三栏布局 ── */
