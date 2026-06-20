@@ -52,7 +52,8 @@
             max-width: var(--content-width); margin: 0 auto;
             display: flex; align-items: center; justify-content: space-between; height: 56px;
         }
-        .navbar .brand { font-size: 1.3rem; font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: -0.02em; transition: color 0.3s; }
+        .navbar .brand { font-size: 1.3rem; font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: -0.02em; transition: color 0.3s; opacity: 0; transition: opacity 0.3s, color 0.3s; }
+        .navbar .brand.visible { opacity: 1; }
         .navbar .brand:hover { color: var(--accent); }
         .nav-links { display: flex; gap: 1.5rem; list-style: none; align-items: center; }
         .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
@@ -69,7 +70,15 @@
         .hero {
             text-align: center; padding: 7rem 2rem 4rem;
             max-width: var(--content-width); margin: 0 auto; position: relative; z-index: 1;
+            transition: padding 0.3s;
         }
+        .hero.scrolled { padding: 1.5rem 2rem 2rem; }
+        .hero h1 {
+            transition: font-size 0.3s, opacity 0.3s, margin 0.3s;
+        }
+        .hero.scrolled h1 { font-size: 1.3rem; opacity: 0; }
+        .hero.scrolled .subtitle { opacity: 0; transition: opacity 0.3s; }
+        .hero.scrolled .divider { opacity: 0; transition: opacity 0.3s; }
         .hero h1 {
             font-size: 3.5rem; font-weight: 900; letter-spacing: -0.06em;
             background: var(--gradient-accent);
@@ -618,6 +627,19 @@
         const btn = document.getElementById('backToTop');
         window.addEventListener('scroll', () => btn.classList.toggle('visible', window.scrollY > 400));
         btn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    })();
+
+    /* ═══════════ Hero 滚动 → 导航栏融合 ═══════════ */
+    (function(){
+        var hero = document.querySelector('.hero');
+        var brand = document.querySelector('.navbar .brand');
+        if(!hero || !brand) return;
+        var threshold = 200;
+        window.addEventListener('scroll', function(){
+            var pct = Math.min(1, Math.max(0, scrollY / threshold));
+            hero.classList.toggle('scrolled', scrollY > threshold * 0.6);
+            brand.classList.toggle('visible', scrollY > threshold * 0.5);
+        });
     })();
 
     /* ═══════════ 页面转场 ═══════════ */
