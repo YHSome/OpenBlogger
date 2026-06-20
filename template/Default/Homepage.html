@@ -69,21 +69,44 @@
         /* ── Hero ── */
         .hero {
             text-align: center; padding: 0 2rem;
-            min-height: 100vh; display: flex; flex-direction: column;
+            display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             max-width: var(--content-width); margin: 0 auto; position: relative; z-index: 1;
-            transition: min-height 0.6s cubic-bezier(0.4,0,0.2,1), padding 0.6s;
+            height: calc(100vh - 56px);
+            transition: height 0.7s cubic-bezier(0.4,0,0.2,1);
         }
-        .hero.scrolled {
-            min-height: auto; padding: 7rem 2rem 4rem;
-        }
-        .hero.fully-scrolled { padding: 1.5rem 2rem 2rem; }
+        .hero.reveal { height: 280px; }
+        .hero.scrolled { height: 100px; }
         .hero h1 {
-            transition: font-size 0.3s, opacity 0.3s, margin 0.3s;
+            font-size: 3.5rem; font-weight: 900; letter-spacing: -0.06em;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.25rem; line-height: 1.15;
+            font-family: "Georgia","Noto Serif SC","Source Han Serif SC",serif;
+            transition: font-size 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.5s, margin 0.7s;
         }
-        .hero.scrolled h1 { font-size: 1.3rem; opacity: 0; }
-        .hero.scrolled .subtitle { opacity: 0; transition: opacity 0.3s; }
-        .hero.scrolled .divider { opacity: 0; transition: opacity 0.3s; }
+        .hero.reveal h1 { font-size: 2.4rem; }
+        .hero.scrolled h1 { font-size: 1.3rem; opacity: 0; margin-bottom: 0.4rem; }
+        .hero .subtitle {
+            font-size: 1.2rem; color: var(--text-secondary); max-width: 560px;
+            margin: 0 auto; letter-spacing: 0.02em;
+            transition: opacity 0.5s;
+        }
+        .hero.reveal .subtitle, .hero.scrolled .subtitle { opacity: 0; }
+        .hero .divider {
+            width: 80px; height: 3px;
+            background: var(--gradient-accent);
+            margin: 1.8rem auto; border-radius: 2px;
+            animation: dividerPulse 2.5s ease-in-out infinite;
+            transition: opacity 0.5s, width 0.7s, margin 0.7s;
+        }
+        .hero.reveal .divider { width: 60px; margin: 1.2rem auto; }
+        .hero.scrolled .divider { opacity: 0; width: 40px; margin: 0.4rem auto; }
+        @keyframes dividerPulse {
+            0%,100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
         .hero h1 {
             font-size: 3.5rem; font-weight: 900; letter-spacing: -0.06em;
             background: var(--gradient-accent);
@@ -143,15 +166,19 @@
             max-width: var(--content-width); margin: 0 auto;
             padding: 0 2rem 3rem; display: flex; gap: 2.5rem;
             flex: 1; width: 100%; position: relative; z-index: 1;
-            opacity: 0; transition: opacity 0.5s;
+            opacity: 0; transform: translateY(30px);
+            transition: opacity 0.6s 0.3s, transform 0.6s 0.3s;
         }
-        .main-layout.revealed { opacity: 1; }
-        .footer { opacity: 0; transition: opacity 0.5s; }
+        .main-layout.revealed { opacity: 1; transform: translateY(0); }
+        .footer {
+            opacity: 0; transition: opacity 0.5s 0.4s;
+        }
         .footer.revealed { opacity: 1; }
-        .search-bar, .search-result-count { opacity: 0; transition: opacity 0.5s 0.2s; }
+        .search-bar, .search-result-count {
+            opacity: 0; transition: opacity 0.4s 0.35s;
+        }
         .search-bar.revealed, .search-result-count.revealed { opacity: 1; }
-        .back-to-top { opacity: 0 !important; transition: opacity 0.5s 0.3s !important; }
-        .back-to-top.revealed { opacity: 0 !important; }
+        .back-to-top { transition: opacity 0.4s 0.5s !important; }
         .back-to-top.revealed-visible { opacity: 1 !important; }
         .content-main { flex: 1; min-width: 0; }
         .sidebar {
@@ -643,26 +670,22 @@
         btn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
     })();
 
-    /* ═══════════ Hero 交互式揭示：按键或滚轮触发 ═══════════ */
+    /* ═══════════ Hero 交互式揭示 ═══════════ */
     (function(){
         var hero = document.querySelector('.hero');
         var brand = document.querySelector('.navbar .brand');
         if(!hero || !brand) return;
-        var revealed = false, scrollLocked = false, lockTimer = null;
+        var revealed = false;
 
         function reveal(){
             if(revealed) return;
             revealed = true;
-            hero.classList.add('scrolled');
+            // 阶段 1: Hero 开始收缩 + brand 淡入
+            hero.classList.add('reveal');
             brand.classList.add('visible');
-            document.querySelectorAll('.main-layout,.footer,.search-bar,.search-result-count,.back-to-top').forEach(function(el){el.classList.add('revealed')});
-            // 平滑滚动到内容区
-            scrollLocked = true;
-            setTimeout(function(){
-                window.scrollTo({top: window.innerHeight * 0.5, behavior: 'smooth'});
-                setTimeout(function(){ scrollLocked = false; hero.classList.add('fully-scrolled'); }, 700);
-            }, 100);
-            // 恢复 back-to-top 的正常滚动行为
+            // 阶段 2: 内容延迟淡入 (CSS transition-delay 控制)
+            document.querySelectorAll('.main-layout,.footer,.search-bar,.search-result-count').forEach(function(el){el.classList.add('revealed')});
+            // 过渡完成后允许 back-to-top 正常显示
             setTimeout(function(){
                 var btt = document.getElementById('backToTop');
                 if(btt) btt.classList.add('revealed-visible');
@@ -671,7 +694,6 @@
 
         // 滚轮触发
         document.addEventListener('wheel', function(e){
-            if(scrollLocked){ e.preventDefault(); return; }
             if(!revealed && e.deltaY > 0){
                 e.preventDefault();
                 reveal();
@@ -686,21 +708,26 @@
             }
         });
 
-        // 滚动触发（触屏等）
-        var touchStarted = false;
-        document.addEventListener('touchstart', function(){ touchStarted = true; });
+        // 触屏触发
+        var ts = false;
+        document.addEventListener('touchstart', function(){ ts = true; });
         document.addEventListener('touchmove', function(e){
-            if(!revealed && touchStarted){
-                reveal();
-            }
+            if(!revealed && ts){ reveal(); }
         }, {passive: true});
 
-        // 后续滚动时的 hero 收缩逻辑
+        // 滚动收缩 hero
+        var scrollTicking = false;
         window.addEventListener('scroll', function(){
             if(!revealed) return;
-            var sy = scrollY;
-            hero.classList.toggle('fully-scrolled', sy > 200);
-            brand.classList.toggle('visible', sy > 100);
+            if(!scrollTicking){
+                requestAnimationFrame(function(){
+                    var sy = window.scrollY;
+                    hero.classList.toggle('scrolled', sy > 150);
+                    brand.classList.toggle('visible', sy > 50);
+                    scrollTicking = false;
+                });
+                scrollTicking = true;
+            }
         }, {passive: true});
     })();
 
