@@ -595,7 +595,7 @@ class BlogRenderer:
                 {
                     "title": "👥 好友链接",
                     "links": [
-                        {"name": "MKrari", "desc": "个人博客", "icon": "<img src=\"images/ksm1.webp\" style=\"width:24px;height:24px;border-radius:50%\">", "url": "https://mkrari.cn/"},
+                        {"name": "MKrari", "desc": "个人博客", "icon": "<img src=\"images/ksm1.webp\" style=\"width:36px;height:36px;border-radius:50%\">", "url": "https://mkrari.cn/"},
                     ],
                 },
                 {
