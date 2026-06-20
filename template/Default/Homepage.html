@@ -189,7 +189,10 @@
             text-transform: uppercase; letter-spacing: 0.08em;
             margin-bottom: 1.25rem; padding-bottom: 0.5rem;
             border-bottom: 2px solid var(--border); transition: border 0.4s;
+            position: sticky; top: 56px; z-index: 5;
+            background: var(--bg); padding-top: 0.5rem;
         }
+        .proj-sticky .section-title { position: static; background: transparent; padding-top: 0; }
 
         /* ── 侧栏小部件 ── */
         .sidebar-widget {
