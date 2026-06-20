@@ -76,7 +76,6 @@
             transition: height 0.7s cubic-bezier(0.4,0,0.2,1);
         }
         .hero.reveal { height: 280px; }
-        .hero.scrolled { height: 100px; }
         .hero h1 {
             font-size: 3.5rem; font-weight: 900; letter-spacing: -0.06em;
             background: var(--gradient-accent);
@@ -87,13 +86,12 @@
             transition: font-size 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.5s, margin 0.7s;
         }
         .hero.reveal h1 { font-size: 2.4rem; }
-        .hero.scrolled h1 { font-size: 1.3rem; opacity: 0; margin-bottom: 0.4rem; }
         .hero .subtitle {
             font-size: 1.2rem; color: var(--text-secondary); max-width: 560px;
             margin: 0 auto; letter-spacing: 0.02em;
             transition: opacity 0.5s;
         }
-        .hero.reveal .subtitle, .hero.scrolled .subtitle { opacity: 0; }
+        .hero.reveal .subtitle { opacity: 0; }
         .hero .divider {
             width: 80px; height: 3px;
             background: var(--gradient-accent);
@@ -102,7 +100,6 @@
             transition: opacity 0.5s, width 0.7s, margin 0.7s;
         }
         .hero.reveal .divider { width: 60px; margin: 1.2rem auto; }
-        .hero.scrolled .divider { opacity: 0; width: 40px; margin: 0.4rem auto; }
         @keyframes dividerPulse {
             0%,100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -713,21 +710,6 @@
         document.addEventListener('touchstart', function(){ ts = true; });
         document.addEventListener('touchmove', function(e){
             if(!revealed && ts){ reveal(); }
-        }, {passive: true});
-
-        // 滚动收缩 hero
-        var scrollTicking = false;
-        window.addEventListener('scroll', function(){
-            if(!revealed) return;
-            if(!scrollTicking){
-                requestAnimationFrame(function(){
-                    var sy = window.scrollY;
-                    hero.classList.toggle('scrolled', sy > 150);
-                    brand.classList.toggle('visible', sy > 50);
-                    scrollTicking = false;
-                });
-                scrollTicking = true;
-            }
         }, {passive: true});
     })();
 
