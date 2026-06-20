@@ -629,17 +629,36 @@
         btn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
     })();
 
-    /* ═══════════ Hero 滚动 → 导航栏融合 ═══════════ */
+    /* ═══════════ Hero 滚动 → 导航栏融合 + 顿挫 ═══════════ */
     (function(){
         var hero = document.querySelector('.hero');
         var brand = document.querySelector('.navbar .brand');
         if(!hero || !brand) return;
-        var threshold = 200;
+        var threshold = 200, locked = false, lastDir = 0, lockTimer = null;
+        var prevY = scrollY;
+
         window.addEventListener('scroll', function(){
-            var pct = Math.min(1, Math.max(0, scrollY / threshold));
-            hero.classList.toggle('scrolled', scrollY > threshold * 0.6);
-            brand.classList.toggle('visible', scrollY > threshold * 0.5);
-        });
+            var sy = scrollY;
+            hero.classList.toggle('scrolled', sy > threshold * 0.6);
+            brand.classList.toggle('visible', sy > threshold * 0.5);
+            if(sy < 50) lastDir = 0;
+        }, {passive: true});
+
+        // 滚轮拦截：穿越 150~250px 区间时顿一下
+        document.addEventListener('wheel', function(e){
+            if(locked){ e.preventDefault(); return; }
+            if(scrollY > 120 && scrollY < 280){
+                var dir = e.deltaY > 0 ? 1 : -1;
+                if(dir !== lastDir){
+                    lastDir = dir;
+                    locked = true;
+                    prevY = scrollY;
+                    clearTimeout(lockTimer);
+                    lockTimer = setTimeout(function(){ locked = false; }, 350);
+                    e.preventDefault();
+                }
+            }
+        }, {passive: false});
     })();
 
     /* ═══════════ 页面转场 ═══════════ */
