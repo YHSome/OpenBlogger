@@ -68,11 +68,16 @@
 
         /* ── Hero ── */
         .hero {
-            text-align: center; padding: 7rem 2rem 4rem;
+            text-align: center; padding: 0 2rem;
+            min-height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
             max-width: var(--content-width); margin: 0 auto; position: relative; z-index: 1;
-            transition: padding 0.3s;
+            transition: min-height 0.6s cubic-bezier(0.4,0,0.2,1), padding 0.6s;
         }
-        .hero.scrolled { padding: 1.5rem 2rem 2rem; }
+        .hero.scrolled {
+            min-height: auto; padding: 7rem 2rem 4rem;
+        }
+        .hero.fully-scrolled { padding: 1.5rem 2rem 2rem; }
         .hero h1 {
             transition: font-size 0.3s, opacity 0.3s, margin 0.3s;
         }
@@ -143,8 +148,11 @@
         .main-layout.revealed { opacity: 1; }
         .footer { opacity: 0; transition: opacity 0.5s; }
         .footer.revealed { opacity: 1; }
-        .search-bar, .search-result-count { opacity: 0; transition: opacity 0.4s; }
+        .search-bar, .search-result-count { opacity: 0; transition: opacity 0.5s 0.2s; }
         .search-bar.revealed, .search-result-count.revealed { opacity: 1; }
+        .back-to-top { opacity: 0 !important; transition: opacity 0.5s 0.3s !important; }
+        .back-to-top.revealed { opacity: 0 !important; }
+        .back-to-top.revealed-visible { opacity: 1 !important; }
         .content-main { flex: 1; min-width: 0; }
         .sidebar {
             flex: 0 0 var(--sidebar-width);
@@ -635,41 +643,65 @@
         btn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
     })();
 
-    /* ═══════════ Hero 滚动 → 导航栏融合 + 顿挫 ═══════════ */
+    /* ═══════════ Hero 交互式揭示：按键或滚轮触发 ═══════════ */
     (function(){
         var hero = document.querySelector('.hero');
         var brand = document.querySelector('.navbar .brand');
         if(!hero || !brand) return;
-        var threshold = 200, locked = false, lastDir = 0, lockTimer = null;
-        var prevY = scrollY;
+        var revealed = false, scrollLocked = false, lockTimer = null;
 
-        window.addEventListener('scroll', function(){
-            var sy = scrollY;
-            var past = sy > threshold * 0.5;
-            hero.classList.toggle('scrolled', sy > threshold * 0.6);
-            brand.classList.toggle('visible', past);
-            // 首次下滚后揭示页面内容
-            if(past){
-                document.querySelectorAll('.main-layout,.footer,.search-bar,.search-result-count').forEach(function(el){el.classList.add('revealed')});
-            }
-            if(sy < 50) lastDir = 0;
-        }, {passive: true});
+        function reveal(){
+            if(revealed) return;
+            revealed = true;
+            hero.classList.add('scrolled');
+            brand.classList.add('visible');
+            document.querySelectorAll('.main-layout,.footer,.search-bar,.search-result-count,.back-to-top').forEach(function(el){el.classList.add('revealed')});
+            // 平滑滚动到内容区
+            scrollLocked = true;
+            setTimeout(function(){
+                window.scrollTo({top: window.innerHeight * 0.5, behavior: 'smooth'});
+                setTimeout(function(){ scrollLocked = false; hero.classList.add('fully-scrolled'); }, 700);
+            }, 100);
+            // 恢复 back-to-top 的正常滚动行为
+            setTimeout(function(){
+                var btt = document.getElementById('backToTop');
+                if(btt) btt.classList.add('revealed-visible');
+            }, 1500);
+        }
 
-        // 滚轮拦截：穿越 150~250px 区间时顿一下
+        // 滚轮触发
         document.addEventListener('wheel', function(e){
-            if(locked){ e.preventDefault(); return; }
-            if(scrollY > 120 && scrollY < 280){
-                var dir = e.deltaY > 0 ? 1 : -1;
-                if(dir !== lastDir){
-                    lastDir = dir;
-                    locked = true;
-                    prevY = scrollY;
-                    clearTimeout(lockTimer);
-                    lockTimer = setTimeout(function(){ locked = false; }, 350);
-                    e.preventDefault();
-                }
+            if(scrollLocked){ e.preventDefault(); return; }
+            if(!revealed && e.deltaY > 0){
+                e.preventDefault();
+                reveal();
             }
         }, {passive: false});
+
+        // 键盘触发
+        document.addEventListener('keydown', function(e){
+            if(!revealed && !e.ctrlKey && !e.altKey && !e.metaKey){
+                e.preventDefault();
+                reveal();
+            }
+        });
+
+        // 滚动触发（触屏等）
+        var touchStarted = false;
+        document.addEventListener('touchstart', function(){ touchStarted = true; });
+        document.addEventListener('touchmove', function(e){
+            if(!revealed && touchStarted){
+                reveal();
+            }
+        }, {passive: true});
+
+        // 后续滚动时的 hero 收缩逻辑
+        window.addEventListener('scroll', function(){
+            if(!revealed) return;
+            var sy = scrollY;
+            hero.classList.toggle('fully-scrolled', sy > 200);
+            brand.classList.toggle('visible', sy > 100);
+        }, {passive: true});
     })();
 
     /* ═══════════ 页面转场 ═══════════ */
