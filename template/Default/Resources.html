@@ -68,6 +68,23 @@
         }
         .section-title:first-child { margin-top: 0; }
 
+        /* ── 抽屉式折叠 ── */
+        .drawer { margin-bottom: 1.5rem; }
+        .drawer summary {
+            font-size: 1rem; font-weight: 700; color: var(--text);
+            padding: 0.75rem 1rem; cursor: pointer; list-style: none;
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); box-shadow: var(--shadow);
+            display: flex; justify-content: space-between; align-items: center;
+            transition: all 0.3s; user-select: none;
+        }
+        .drawer summary::-webkit-details-marker { display: none; }
+        .drawer summary:hover { border-color: var(--accent); }
+        .drawer summary::after { content: '▸'; font-size: 1.1rem; color: var(--text-secondary); transition: transform 0.3s; }
+        .drawer[open] summary::after { transform: rotate(90deg); }
+        .drawer[open] summary { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; }
+        .drawer .drawer-body { padding: 0.5rem 0.25rem 0; }
+
         .res-card {
             background: var(--card-bg); border: 1px solid var(--border);
             border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 0.8rem;
@@ -206,7 +223,9 @@
 
     <div class="container">
         {% if projects %}
-        <div class="section-title">🚀 GitHub 开源项目</div>
+        <details class="drawer" open>
+            <summary>🚀 GitHub 开源项目 <span style="font-weight:400;font-size:0.8rem;color:var(--text-secondary)">{{ projects | length }} 个仓库</span></summary>
+            <div class="drawer-body">
         {% for proj in projects %}
         <a href="{{ proj.link }}" class="res-card" target="_blank" rel="noopener">
             <div class="res-icon">{{ proj.icon }}</div>
@@ -225,10 +244,14 @@
             <span class="res-arrow">→</span>
         </a>
         {% endfor %}
+            </div>
+        </details>
         {% endif %}
 
         {% for section in link_sections %}
-        <div class="section-title">{{ section.title }}</div>
+        <details class="drawer">
+            <summary>{{ section.title }} <span style="font-weight:400;font-size:0.8rem;color:var(--text-secondary)">{{ section.links | length }} 个项目</span></summary>
+            <div class="drawer-body">
         {% for link in section.links %}
         <a href="{{ link.url }}" class="res-card" target="_blank" rel="noopener">
             <div class="res-icon">{{ link.icon }}</div>
@@ -240,6 +263,8 @@
             <span class="res-arrow">→</span>
         </a>
         {% endfor %}
+            </div>
+        </details>
         {% endfor %}
     </div>
 
