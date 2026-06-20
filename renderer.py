@@ -477,7 +477,7 @@ class BlogRenderer:
     def _build_homepage_context(self) -> dict:
         """构建首页模板上下文。"""
         all_posts = [self._summary(p) for p in self.posts]
-        recent = all_posts[:2]  # 首页只展示最近 1-2 篇
+        recent = all_posts[:3]  # 首页展示最近 3 篇
         # 项目标签的文章
         projects = [s for p in self.posts
                     if "项目" in p["metadata"].get("tags", [])

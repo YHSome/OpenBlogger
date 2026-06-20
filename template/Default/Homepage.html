@@ -657,8 +657,14 @@
                 c.classList.toggle('hidden', !match);
                 if (match) visible++;
             });
-            if (q) { count.textContent = visible > 0 ? `找到 ${visible} 篇相关文章` : '没有匹配的文章，换个关键词试试？'; count.classList.add('visible'); }
+            if (q) { count.textContent = visible > 0 ? `本页 ${visible} 篇，按回车搜索全部` : '本页无匹配，按回车搜索全部'; count.classList.add('visible'); }
             else { count.classList.remove('visible'); }
+        });
+        input.addEventListener('keydown', function(e){
+            if(e.key === 'Enter'){
+                var q = input.value.trim();
+                if(q) location.href = 'directory.html?search=' + encodeURIComponent(q);
+            }
         });
     })();
 
