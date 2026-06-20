@@ -410,6 +410,7 @@ class BlogRenderer:
             ("directory.html", "Directory.html", self._build_directory_context()),
             ("tags.html", "Tag.html", self._build_tags_context()),
             ("resources.html", "Resources.html", self._build_resources_context()),
+            ("friendlinks.html", "FriendLinks.html", self._build_friendlinks_context()),
         ]
 
         for filename, template, context in list_pages:
@@ -579,6 +580,44 @@ class BlogRenderer:
                     "title": "📚 参考资源",
                     "links": [
                         {"name": "3500 词研究器", "desc": "英语 3500 词汇研究与数据库", "icon": "📊", "tag": "数据", "url": "friends/3500researcher/"},
+                    ],
+                },
+            ],
+            "current_year": datetime.now().year,
+            "relative_root": "",
+        }
+
+    def _build_friendlinks_context(self) -> dict:
+        """构建友情链接页面上下文。"""
+        return {
+            "site_title": self.config["site_title"],
+            "friend_link_sections": [
+                {
+                    "title": "🛠️ 开发工具",
+                    "links": [
+                        {"name": "GitHub", "desc": "全球最大的代码托管平台", "icon": "🐙", "url": "https://github.com"},
+                        {"name": "TinyWebDB", "desc": "轻量级云数据库，Viewer 插件的数据后端", "icon": "☁️", "url": "https://tinywebdb.appinventor.space"},
+                        {"name": "jsDelivr", "desc": "免费 CDN，加速静态资源加载", "icon": "🚀", "url": "https://www.jsdelivr.com"},
+                        {"name": "Carbon", "desc": "代码截图美化工具", "icon": "🎨", "url": "https://carbon.now.sh"},
+                        {"name": "Regex101", "desc": "正则表达式在线测试与调试", "icon": "🔍", "url": "https://regex101.com"},
+                    ],
+                },
+                {
+                    "title": "🤖 AI 工具",
+                    "links": [
+                        {"name": "Claude", "desc": "Anthropic 的 AI 助手，OpenBlogger 的幕后搭档", "icon": "🧠", "url": "https://claude.ai"},
+                        {"name": "ChatGPT", "desc": "OpenAI 的对话 AI", "icon": "💬", "url": "https://chat.openai.com"},
+                        {"name": "Hugging Face", "desc": "开源 AI 模型社区，西柚英语翻译模型来源", "icon": "🤗", "url": "https://huggingface.co"},
+                        {"name": "Poe", "desc": "多模型 AI 聚合平台", "icon": "📱", "url": "https://poe.com"},
+                    ],
+                },
+                {
+                    "title": "📖 学习资源",
+                    "links": [
+                        {"name": "MDN Web Docs", "desc": "Web 开发权威文档", "icon": "📘", "url": "https://developer.mozilla.org/zh-CN/"},
+                        {"name": "Python 官方文档", "desc": "Python 语言标准库参考", "icon": "🐍", "url": "https://docs.python.org/zh-cn/3/"},
+                        {"name": "Markdown 指南", "desc": "Markdown 语法速查", "icon": "📝", "url": "https://www.markdownguide.org"},
+                        {"name": "Can I Use", "desc": "浏览器特性兼容性查询", "icon": "🌐", "url": "https://caniuse.com"},
                     ],
                 },
             ],
