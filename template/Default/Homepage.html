@@ -226,6 +226,60 @@
 
         .empty-state { text-align: center; color: var(--text-secondary); padding: 3rem 0; font-size: 1.05rem; }
 
+        /* ── 棱镜扫过动画 ── */
+        .prism-overlay { position: fixed; inset: 0; z-index: 9999; pointer-events: none; overflow: hidden; }
+        .prism-bar {
+            position: absolute; top: -20%; height: 140%;
+            width: 80px; opacity: 0;
+            background: linear-gradient(180deg, transparent 0%, var(--accent) 40%, var(--accent) 60%, transparent 100%);
+            transform: skewX(-25deg);
+        }
+        .prism-bar:nth-child(1) { left: -10%; animation: prismSweep1 0.7s ease-in forwards; }
+        .prism-bar:nth-child(2) { left: -10%; animation: prismSweep2 0.7s 0.08s ease-in forwards; }
+        .prism-bar:nth-child(3) { left: -10%; animation: prismSweep3 0.7s 0.16s ease-in forwards; }
+        @keyframes prismSweep1 {
+            0%   { left: -10%; opacity: 0; }
+            10%  { opacity: 0.35; }
+            90%  { opacity: 0.35; }
+            100% { left: 110%; opacity: 0; }
+        }
+        @keyframes prismSweep2 {
+            0%   { left: -10%; opacity: 0; }
+            10%  { opacity: 0.25; }
+            90%  { opacity: 0.25; }
+            100% { left: 110%; opacity: 0; }
+        }
+        @keyframes prismSweep3 {
+            0%   { left: -10%; opacity: 0; }
+            10%  { opacity: 0.15; }
+            90%  { opacity: 0.15; }
+            100% { left: 110%; opacity: 0; }
+        }
+
+        /* ── 项目展示卡片 ── */
+        .project-showcase { margin-top: 0.5rem; }
+        .project-card-sm {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1rem 1.4rem; margin-bottom: 0.7rem;
+            box-shadow: var(--shadow); text-decoration: none; color: var(--text);
+            display: flex; gap: 0.8rem; align-items: center;
+            transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+            position: relative; overflow: hidden;
+        }
+        .project-card-sm::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 3px; background: var(--accent); border-radius: 0 3px 3px 0;
+            transform: scaleY(0); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+        }
+        .project-card-sm:hover::before { transform: scaleY(1); }
+        .project-card-sm:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); border-color: var(--accent); }
+        .project-card-sm .sm-icon { font-size: 1.5rem; flex-shrink: 0; width: 36px; text-align: center; }
+        .project-card-sm .sm-info { flex: 1; min-width: 0; }
+        .project-card-sm .sm-name { font-size: 1rem; font-weight: 700; }
+        .project-card-sm:hover .sm-name { color: var(--accent); }
+        .project-card-sm .sm-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.1rem; }
+        @media (max-width: 768px) { .project-card-sm { padding: 0.85rem 1rem; } }
+
         /* ── 响应式：窄屏还原单栏 ── */
         @media (max-width: 768px) {
             :root { --content-width: 100%; --sidebar-width: 100%; --danmaku-width: 100%; }
@@ -356,6 +410,13 @@
     </style>
 </head>
 <body>
+    <!-- 棱镜扫过 -->
+    <div class="prism-overlay" id="prismOverlay">
+        <div class="prism-bar"></div>
+        <div class="prism-bar"></div>
+        <div class="prism-bar"></div>
+    </div>
+
     <canvas id="particles"></canvas>
 
     <nav class="navbar">
@@ -427,6 +488,21 @@
                 {% endfor %}
             {% else %}
                 <div class="empty-state">还没有文章，开始写第一篇吧 ✍️</div>
+            {% endif %}
+
+            {% if project_posts %}
+            <div class="project-showcase">
+                <div class="section-title">🚀 项目</div>
+                {% for proj in project_posts %}
+                <a href="{{ proj.url }}" class="project-card-sm">
+                    <div class="sm-icon">📦</div>
+                    <div class="sm-info">
+                        <div class="sm-name">{{ proj.title }}</div>
+                        {% if proj.excerpt %}<div class="sm-desc">{{ proj.excerpt }}</div>{% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
             {% endif %}
         </main>
 
@@ -553,7 +629,10 @@
     /* ═══════════ 页面转场 ═══════════ */
     (function(){
         document.body.classList.add('page-entering');
-        addEventListener('load',function(){setTimeout(function(){document.body.classList.remove('page-entering')},700)});
+        addEventListener('load',function(){
+            setTimeout(function(){document.body.classList.remove('page-entering')},700);
+            setTimeout(function(){var p=document.getElementById('prismOverlay');if(p)p.remove()},900);
+        });
         addEventListener('pageshow',function(e){if(e.persisted){document.body.classList.remove('page-exiting','page-entering');document.querySelectorAll('*').forEach(function(el){el.style.animation='none';el.offsetHeight;el.style.animation=''})}});
         if(location.protocol==='file:')return;  // file:// 下不做转场动画
         document.addEventListener('click',function(e){

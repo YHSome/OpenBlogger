@@ -476,12 +476,18 @@ class BlogRenderer:
 
     def _build_homepage_context(self) -> dict:
         """构建首页模板上下文。"""
-        recent = self.posts[: self.config.get("posts_per_page", 10)]
+        all_posts = [self._summary(p) for p in self.posts]
+        recent = all_posts[:2]  # 首页只展示最近 1-2 篇
+        # 项目标签的文章
+        projects = [s for p in self.posts
+                    if "项目" in p["metadata"].get("tags", [])
+                    for s in [self._summary(p)]]
         all_tags = self._collect_tags()
         return {
             "site_title": self.config["site_title"],
             "site_description": self.config["site_description"],
-            "recent_posts": [self._summary(p) for p in recent],
+            "recent_posts": recent,
+            "project_posts": projects,             # 项目展示区
             "all_tags": all_tags,
             "sidebar_tags": self._random_sidebar_tags(),  # 精选标签（侧栏展示）
             "total_posts": len(self.posts),       # 全站文章总数（侧栏统计用）
