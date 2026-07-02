@@ -518,15 +518,24 @@
                     </div>
                 </div>
                 {% endif %}
-                {% if viewer_comment and max_page_id > 0 %}
-                <!-- 精选发言 (侧栏) -->
-                <div class="sidebar-widget sidebar-danmaku" id="danmakuBar" data-max-pid="{{ max_page_id }}">
-                    <div class="widget-title">💬 精选发言</div>
-                    <div class="sidebar-danmaku-track">
-                        <div class="sidebar-danmaku-scroll" id="danmakuScroll">
-                            <div class="danmaku-item"><div class="dm-author">加载中…</div></div>
-                        </div>
+                {% if updates and updates.timeline %}
+                <!-- 近期 GitHub 更新 (侧栏) -->
+                <div class="sidebar-widget" id="updatesWidget">
+                    <div class="widget-title">🕐 近期更新</div>
+                    <div style="max-height:290px;overflow-y:auto;mask-image:linear-gradient(to bottom,black 85%,transparent 100%)">
+                    {% for e in updates.timeline[:5] %}
+                    <div style="padding:0.35rem 0;border-bottom:1px solid var(--border);font-size:0.78rem;line-height:1.35">
+                        <span style="margin-right:0.25rem">{{ e.icon }}</span>
+                        <a href="{{ e.repo_url }}" target="_blank" rel="noopener" style="font-weight:600;color:var(--accent);text-decoration:none">{{ e.repo.split('/')[-1] }}</a>
+                        <span style="font-size:0.65rem;color:var(--text-secondary);display:block">{{ e.label }}{% if e.ref and e.type == 'PushEvent' %} → {{ e.ref }}{% endif %} · {{ e.time[:10] }}</span>
+                        {% if e.messages and e.messages[0] %}<span style="font-size:0.66rem;color:var(--text-secondary);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px" title="{{ e.messages[0] }}">{{ e.messages[0] }}</span>
+                        {% elif e.title %}<span style="font-size:0.66rem;color:var(--text-secondary);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px" title="{{ e.title }}">{% if e.action %}{{ e.action }}: {% endif %}{{ e.title }}</span>
+                        {% elif e.detail %}<span style="font-size:0.66rem;color:var(--text-secondary);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">{{ e.detail }}</span>
+                        {% endif %}
                     </div>
+                    {% endfor %}
+                    </div>
+                    <div style="text-align:right;padding-top:0.3rem"><a href="{{ relative_root }}updates-page.html" style="font-size:0.72rem;color:var(--accent);text-decoration:none">查看全部 →</a></div>
                 </div>
                 {% endif %}
             </div>
@@ -756,89 +765,6 @@
         {% if viewer_unique %}Viewer.getUniqueCount().then(function(r){var e=document.getElementById('vUnique');if(e)e.innerHTML=r.count.toLocaleString()});{% endif %}
     })();
     </script>
-    {% if viewer_comment %}
-    <!-- Viewer 插件：弹幕评论 -->
-    <script>
-    (function(){
-        var bar=document.getElementById('danmakuBar');
-        if(!bar)return;
-        var maxPid=parseInt(bar.dataset.maxPid)||0;
-        if(!maxPid)return;
-        var API='https://tinywebdb.appinventor.space/api';
-        var USER=(window.ViewerConfig&&window.ViewerConfig.user)||'aaaaa';
-        var SECRET=(window.ViewerConfig&&window.ViewerConfig.secret)||'d1bdf09a';
-        var scroll=document.getElementById('danmakuScroll');
-        var allComments=[], loaded=!1;
-        function call(p){
-            var b=new URLSearchParams({user:USER,secret:SECRET});
-            Object.keys(p).forEach(function(k){b.append(k,p[k])});
-            return fetch(API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b.toString()})
-                .then(function(r){return r.ok?r.text():Promise.reject(r.status)})
-                .then(function(t){try{return JSON.parse(t)}catch(e){return t}});
-        }
-        function extractVal(raw,tag){
-            var v=raw;
-            if(Array.isArray(raw)&&raw[0]==='VALUE')v=raw[2];
-            else if(typeof raw==='object'&&raw!==null&&raw[tag]!==undefined)v=raw[tag];
-            return v;
-        }
-        function loadCommentsForPage(pid){
-            var countTag='comment_count_'+pid;
-            return call({action:'get',tag:countTag}).then(function(raw){
-                var v=extractVal(raw,countTag);
-                var count=parseInt(v,10)||0;
-                if(!count)return[];
-                var tasks=[];
-                for(var i=1;i<=count;i++){
-                    tasks.push(call({action:'get',tag:'comment_'+pid+'_'+i}));
-                }
-                return Promise.all(tasks).then(function(results){
-                    return results.map(function(r,idx){
-                        var val=extractVal(r,'comment_'+pid+'_'+(idx+1));
-                        if(!val)return null;
-                        try{return typeof val==='string'?JSON.parse(val):val}catch(e){return null}
-                    }).filter(Boolean);
-                });
-            });
-        }
-        function render(){
-            if(!allComments.length){
-                scroll.innerHTML='<div class="danmaku-item"><div class="dm-author">还没有评论…</div><div class="dm-body">去文章页说点什么吧</div></div>';
-                return;
-            }
-            // 全量展示，翻倍以无缝循环
-            var doubled=allComments.concat(allComments);
-            scroll.innerHTML=doubled.map(function(c){
-                var name=(c.name||'匿名').replace(/</g,'&lt;');
-                var body=(c.content||'').replace(/</g,'&lt;').substring(0,80);
-                return '<div class="danmaku-item"><div class="dm-author">'+name+'</div><div class="dm-body">'+body+'</div></div>';
-            }).join('');
-        }
-        // 遍历所有页面加载评论
-        var pidQueue=[];
-        for(var i=1;i<=maxPid;i++) pidQueue.push(i);
-        // 分批加载（每批 5 个并发），避免过多请求
-        function loadBatch(idx){
-            if(idx>=pidQueue.length){
-                render();
-                return;
-            }
-            var batch=pidQueue.slice(idx,idx+5);
-            Promise.all(batch.map(function(pid){return loadCommentsForPage(pid).catch(function(){return[]})}))
-                .then(function(results){
-                    results.forEach(function(cs){allComments=allComments.concat(cs)});
-                    loadBatch(idx+5);
-                });
-        }
-        loadBatch(0);
-        // 每 3 分钟刷新一次弹幕
-        setInterval(function(){
-            allComments=[];
-            loadBatch(0);
-        },180000);
-    })();
-    </script>
-    {% endif %}
     {% endif %}
 </body>
 </html>

@@ -34,6 +34,7 @@ VIEWER_JS_DIR = PROJECT_ROOT / "OpenBlogger" / "Plugins" / "Viewer" / "js"  # �
 PAGE_ID_FILE = PROJECT_ROOT / ".data" / ".viewer_pages.json"
 CACHE_FILE = PROJECT_ROOT / ".data" / ".render_cache.json"
 PROJECTS_FILE = PLUGINS_DIR / "GitHubProjects" / "projects.json"
+UPDATES_FILE = PROJECT_ROOT / "OpenBlogger" / "Plugins" / "GitHubActivity" / "updates.json"
 
 # ── GitHub 语言颜色映射 ──
 LANG_COLORS = {
@@ -411,6 +412,7 @@ class BlogRenderer:
             ("tags.html", "Tag.html", self._build_tags_context()),
             ("resources.html", "Resources.html", self._build_resources_context()),
             ("friendlinks.html", "FriendLinks.html", self._build_friendlinks_context()),
+            ("updates-page.html", "Updates.html", self._build_updates_context()),
         ]
 
         for filename, template, context in list_pages:
@@ -493,6 +495,7 @@ class BlogRenderer:
             "sidebar_tags": self._random_sidebar_tags(),  # 精选标签（侧栏展示）
             "total_posts": len(self.posts),       # 全站文章总数（侧栏统计用）
             "total_words": self._count_total_words(),  # 全站总字数
+            "updates": self._load_updates(),  # 首页侧栏（模板内限制 5 条）
             "max_page_id": max(self._page_ids.values()) if self._page_ids else 0,  # 弹幕用
             "current_year": datetime.now().year,
             "relative_root": "",                  # 首页在根目录
@@ -556,10 +559,13 @@ class BlogRenderer:
         }
 
     def _build_resources_context(self) -> dict:
-        """构建资源页上下文（GitHub 项目 + 友链工具合并）。"""
+        """构建资源页上下文（GitHub 项目 + 近期更新 + 友链工具合并）。"""
+        gh_token = self.config.get("github_token", "")
         return {
             "site_title": self.config["site_title"],
+            "github_token": gh_token,          # GitHub API 认证 token（空则无认证请求）
             "projects": self._load_projects(),
+            "updates": self._load_updates(),    # 近七天 GitHub 活动
             "link_sections": [
                 {
                     "title": "🎮 在线小工具",
@@ -631,6 +637,15 @@ class BlogRenderer:
             "relative_root": "",
         }
 
+    def _build_updates_context(self) -> dict:
+        """构建 GitHub 更新记录独立页上下文。"""
+        return {
+            "site_title": self.config["site_title"],
+            "updates": self._load_updates(),
+            "current_year": datetime.now().year,
+            "relative_root": "",
+        }
+
     def _load_projects(self) -> list[dict]:
         """从 projects.json 加载 GitHub 仓库数据，格式化为模板用的结构。"""
         if not PROJECTS_FILE.exists():
@@ -671,6 +686,22 @@ class BlogRenderer:
                 "icon": icon,
             })
         return result
+
+    def _load_updates(self) -> dict:
+        """从 GitHubActivity 插件目录加载全部更新记录。"""
+        if not UPDATES_FILE.exists():
+            return {}
+        try:
+            data = json.loads(UPDATES_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return {}
+        meta = data.get("meta", {})
+        return {
+            "fetched_at": meta.get("fetched_at", ""),
+            "summary": meta.get("summary", {}),
+            "timeline": data.get("timeline", []),
+            "by_repo": data.get("by_repo", {}),
+        }
 
     def _count_total_words(self) -> int:
         """统计全站文章总字数（去除 Markdown 标记后的纯文本字数）。"""

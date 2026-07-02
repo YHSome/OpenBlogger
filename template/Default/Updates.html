@@ -6,7 +6,7 @@
     <meta name="x-viewer-page-id" content="{{ page_id }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>(function(){var s=localStorage.getItem('blog-theme');if(s==='dark'||(!s&&matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}})();</script>
-    <title>资源 — {{ site_title }}</title>
+    <title>近期更新 — {{ site_title }}</title>
     <style>
         :root {
             --bg: #fdfbf7; --card-bg: #ffffff; --text: #2c2416; --text-secondary: #6b5e4a;
@@ -61,19 +61,49 @@
         .page-header .subtitle { font-size: 1rem; color: var(--text-secondary); }
 
         .container { max-width: var(--max-width); margin: 0 auto; padding: 0 2rem 3rem; flex: 1; width: 100%; position: relative; z-index: 1; }
-        .section-title {
-            font-size: 1rem; font-weight: 600; color: var(--text-secondary);
-            text-transform: uppercase; letter-spacing: 0.08em;
-            margin: 2rem 0 1rem; padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--border); transition: border 0.4s;
-        }
-        .section-title:first-child { margin-top: 0; }
 
-        /* ── 抽屉式折叠 ── */
-        .drawer { margin-bottom: 1.5rem; }
+        /* 摘要横幅 */
+        .summary-banner {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1rem 1.5rem; margin-bottom: 1.5rem;
+            box-shadow: var(--shadow); display: flex; gap: 1.5rem; flex-wrap: wrap;
+            justify-content: center; font-size: 0.9rem; color: var(--text-secondary);
+        }
+        .summary-banner strong { color: var(--accent); font-size: 1.1rem; }
+
+        /* 时间线 */
+        .tl-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 0.6rem;
+            box-shadow: var(--shadow); display: flex; gap: 0.8rem; align-items: flex-start;
+            transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .tl-card::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 3px; background: var(--accent); border-radius: 0 3px 3px 0;
+            transform: scaleY(0); transition: transform 0.35s;
+        }
+        .tl-card:hover::before { transform: scaleY(1); }
+        .tl-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-1px); }
+        .tl-card .tl-icon { font-size: 1.3rem; width: 32px; text-align: center; flex-shrink: 0; margin-top: 2px; }
+        .tl-card .tl-body { flex: 1; min-width: 0; }
+        .tl-card .tl-head { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+        .tl-card .tl-repo { font-weight: 700; color: var(--accent); text-decoration: none; }
+        .tl-card .tl-repo:hover { text-decoration: underline; }
+        .tl-card .tl-ref { font-size: 0.75rem; color: var(--text-secondary); background: var(--tag-bg); padding: 0.1rem 0.5rem; border-radius: 3px; }
+        .tl-card .tl-time { font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; }
+        .tl-card .tl-msgs { margin-top: 0.4rem; }
+        .tl-card .tl-msg { font-size: 0.82rem; color: var(--text-secondary); padding: 0.2rem 0; border-bottom: 1px dashed var(--border); }
+        .tl-card .tl-msg:last-child { border-bottom: none; }
+        .tl-card .tl-msg::before { content: '▸ '; color: var(--accent); font-size: 0.7rem; }
+        .tl-card .tl-title { font-size: 0.88rem; color: var(--text); margin-top: 0.3rem; }
+
+        /* 日期分隔 */
+        /* 按日折叠 */
+        .drawer { margin-bottom: 0.8rem; }
         .drawer summary {
-            font-size: 1rem; font-weight: 700; color: var(--text);
-            padding: 0.75rem 1rem; cursor: pointer; list-style: none;
+            font-size: 0.95rem; font-weight: 700; color: var(--text);
+            padding: 0.65rem 1rem; cursor: pointer; list-style: none;
             background: var(--card-bg); border: 1px solid var(--border);
             border-radius: var(--radius); box-shadow: var(--shadow);
             display: flex; justify-content: space-between; align-items: center;
@@ -84,66 +114,16 @@
         .drawer summary::after { content: '▸'; font-size: 1.1rem; color: var(--text-secondary); transition: transform 0.3s; }
         .drawer[open] summary::after { transform: rotate(90deg); }
         .drawer[open] summary { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; }
-        .drawer .drawer-body { padding: 0.5rem 0.25rem 0; }
+        .drawer .drawer-body { padding: 0.25rem 0.25rem 0; }
 
-        .res-card {
-            background: var(--card-bg); border: 1px solid var(--border);
-            border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 0.8rem;
-            box-shadow: var(--shadow); text-decoration: none; color: var(--text);
-            display: flex; gap: 1rem; align-items: center;
-            transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
-            position: relative; overflow: hidden;
+        .tl-date-head {
+            font-size: 0.82rem; font-weight: 700; color: var(--text-secondary);
+            padding: 0.6rem 0 0.3rem; margin-top: 0.8rem;
+            border-bottom: 1px solid var(--border);
         }
-        .res-card::before {
-            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
-            width: 3px; background: var(--accent); border-radius: 0 3px 3px 0;
-            transform: scaleY(0); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
-        }
-        .res-card:hover::before { transform: scaleY(1); }
-        .res-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); border-color: var(--accent); }
-        .res-card .res-icon { font-size: 1.8rem; flex-shrink: 0; width: 44px; text-align: center; }
-        .res-card .res-info { flex: 1; min-width: 0; }
-        .res-card .res-name { font-size: 1.1rem; font-weight: 700; transition: color 0.3s; }
-        .res-card:hover .res-name { color: var(--accent); }
-        .res-card .res-desc { font-size: 0.88rem; color: var(--text-secondary); margin-top: 0.2rem; }
-        .res-card .res-meta { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.35rem; }
-        .res-card .res-lang { display: inline-flex; align-items: center; gap: 0.3rem; }
-        .res-card .res-lang-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-        .res-badge {
-            display: inline-block; padding: 0.15rem 0.55rem; border-radius: 100px;
-            font-size: 0.72rem; font-weight: 600;
-        }
-        .res-badge.pages { background: var(--accent); color: #fff; }
-        .res-badge.repo { background: var(--tag-bg); color: var(--accent); }
-        .res-badge.tool { background: var(--tag-bg); color: var(--accent); }
-        .res-card .res-arrow { color: var(--text-secondary); font-size: 1.2rem; flex-shrink: 0; transition: color 0.3s; }
-        .res-card:hover .res-arrow { color: var(--accent); }
+        .tl-date-head:first-child { margin-top: 0; }
 
-        /* 骨架屏加载动画 */
-        @keyframes skeleton-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-        .skeleton-loading { pointer-events:none; animation:skeleton-pulse 1.5s ease-in-out infinite }
-        .skeleton-loading .res-icon { background:var(--border)!important; border-radius:8px }
-        .skeleton-loading .sk-line { height:0.75rem; background:var(--border); border-radius:4px }
-        .gh-error { text-align:center; padding:1.5rem; color:var(--text-secondary); font-size:0.9rem }
-        .gh-error a { color:var(--accent) }
-
-        /* 近期更新时间线 */
-        .tl-item {
-            display:flex; gap:0.7rem; align-items:flex-start;
-            padding:0.45rem 0; border-bottom:1px solid var(--border);
-            font-size:0.87rem; transition: all 0.3s;
-        }
-        .tl-item:last-child { border-bottom:none }
-        .tl-item:hover { color:var(--accent) }
-        .tl-item .tl-icon { font-size:1rem; width:24px;text-align:center;flex-shrink:0;margin-top:1px }
-        .tl-item .tl-body { flex:1; min-width:0 }
-        .tl-item .tl-repo { font-weight:600; color:var(--accent); text-decoration:none }
-        .tl-item .tl-repo:hover { text-decoration:underline }
-        .tl-item .tl-time { font-size:0.72rem; color:var(--text-secondary);white-space:nowrap;flex-shrink:0 }
-        .tl-item .tl-ref { font-size:0.72rem; color:var(--text-secondary); display:inline-block; margin-left:0.3rem }
-        .tl-msg { font-size:0.75rem; color:var(--text-secondary); margin-top:0.1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:500px }
-        .tl-empty { text-align:center; padding:1rem; color:var(--text-secondary); font-size:0.85rem }
-        .tl-meta { font-size:0.72rem; color:var(--text-secondary); margin-top:0.5rem; text-align:right }
+        .tl-empty { text-align: center; padding: 3rem; color: var(--text-secondary); font-size: 1rem; }
 
         .back-to-top {
             position: fixed; bottom: 2rem; right: 2rem; z-index: 200;
@@ -171,9 +151,7 @@
             .page-header h1 { font-size: 1.5rem; }
             .page-header { padding: 1.5rem 1rem 0.8rem; }
             .container { padding: 0 0.75rem 1.5rem; }
-            .res-card { padding: 0.85rem 1rem; }
-            .res-card .res-name { font-size: 1rem; }
-            .res-card .res-desc { font-size: 0.82rem; }
+            .tl-card { padding: 0.7rem 1rem; }
             .back-to-top { bottom: 1rem; right: 1rem; width: 36px; height: 36px; }
             .footer { padding: 1.2rem 1rem; font-size: 0.78rem; }
         }
@@ -195,8 +173,6 @@
         body.page-entering .navbar     { animation: enterDown  0.55s cubic-bezier(0.22,0.61,0.36,1) both; }
         body.page-entering .page-header{ animation: enterDown  0.48s 0.06s cubic-bezier(0.22,0.61,0.36,1) both; }
         body.page-entering .container  { animation: enterUp    0.48s 0.14s cubic-bezier(0.22,0.61,0.36,1) both; }
-        body.page-entering .res-card:nth-child(odd)  { animation: enterLeft  0.45s 0.18s cubic-bezier(0.22,0.61,0.36,1) both; }
-        body.page-entering .res-card:nth-child(even) { animation: enterRight 0.45s 0.20s cubic-bezier(0.22,0.61,0.36,1) both; }
         body.page-entering .footer     { animation: enterUp    0.45s 0.24s cubic-bezier(0.22,0.61,0.36,1) both; }
         body.page-entering .back-to-top{ animation: enterPop   0.35s 0.28s cubic-bezier(0.22,0.61,0.36,1) both; }
 
@@ -237,7 +213,7 @@
                 <li><a href="{{ relative_root }}index.html">首页</a></li>
                 <li><a href="{{ relative_root }}directory.html">目录</a></li>
                 <li><a href="{{ relative_root }}tags.html">标签</a></li>
-                <li><a href="{{ relative_root }}resources.html" class="active">资源</a></li>
+                <li><a href="{{ relative_root }}resources.html">资源</a></li>
                 <li><a href="{{ relative_root }}friendlinks.html">友链</a></li>
                 <li><button class="theme-toggle" id="themeToggle" title="切换颜色模式" aria-label="切换颜色模式">🌙</button></li>
             </ul>
@@ -245,60 +221,55 @@
     </nav>
 
     <div class="page-header">
-        <h1>📦 资源</h1>
-        <p class="subtitle">开源项目 · 在线工具 · 实验作品</p>
+        <h1>🕐 近期更新</h1>
+        <p class="subtitle">GitHub 全部公开活动记录</p>
     </div>
 
     <div class="container">
-        <details class="drawer" open>
-            <summary>🚀 GitHub 开源项目 <span id="gh-repo-count" style="font-weight:400;font-size:0.8rem;color:var(--text-secondary)">加载中…</span></summary>
-            <div class="drawer-body" id="github-projects">
-                <div class="res-card skeleton-loading"><div class="res-icon"></div><div class="res-info"><div class="sk-line" style="width:50%;margin-bottom:0.5rem"></div><div class="sk-line" style="width:80%"></div></div></div>
-                <div class="res-card skeleton-loading"><div class="res-icon"></div><div class="res-info"><div class="sk-line" style="width:55%;margin-bottom:0.5rem"></div><div class="sk-line" style="width:75%"></div></div></div>
-                <div class="res-card skeleton-loading"><div class="res-icon"></div><div class="res-info"><div class="sk-line" style="width:45%;margin-bottom:0.5rem"></div><div class="sk-line" style="width:70%"></div></div></div>
-                <div class="res-card skeleton-loading"><div class="res-icon"></div><div class="res-info"><div class="sk-line" style="width:52%;margin-bottom:0.5rem"></div><div class="sk-line" style="width:78%"></div></div></div>
-            </div>
-        </details>
-
-        {% if updates and updates.timeline %}
-        <details class="drawer" open>
-            <summary>🕐 近期更新 <span style="font-weight:400;font-size:0.8rem;color:var(--text-secondary)">{{ updates.timeline | length }} 条事件 · {{ updates.summary.total_repos }} 个仓库</span></summary>
-            <div class="drawer-body">
-        {% for e in updates.timeline %}
-        <div class="tl-item">
-            <span class="tl-icon">{{ e.icon }}</span>
-            <div class="tl-body">
-                <span>{{ e.label }}</span>
-                <a class="tl-repo" href="{{ e.repo_url }}" target="_blank" rel="noopener">{{ e.repo.split('/')[-1] }}</a>
-                {% if e.ref and e.type == 'PushEvent' %}<span class="tl-ref">{{ e.ref }}</span>{% endif %}
-                {% if e.messages %}<div class="tl-msg" title="{{ e.messages[0] }}">{{ e.messages[0] }}</div>{% endif %}
-            </div>
-            <span class="tl-time">{{ e.time }}</span>
+        {% if updates and updates.summary %}
+        <div class="summary-banner">
+            <span>📊 <strong>{{ updates.summary.total_events }}</strong> 条事件</span>
+            <span>📦 <strong>{{ updates.summary.total_repos }}</strong> 个仓库</span>
+            <span>📝 <strong>{{ updates.summary.total_commits }}</strong> 次提交</span>
+            {% if updates.fetched_at %}<span style="font-size:0.75rem">抓取于 {{ updates.fetched_at[:19].replace('T',' ') }}</span>{% endif %}
         </div>
-        {% endfor %}
-                <div class="tl-meta">📡 数据来源: GitHub Events API · 抓取于 {{ updates.fetched_at[:19].replace('T',' ') }}</div>
-            </div>
-        </details>
         {% endif %}
 
-        {% for section in link_sections %}
-        <details class="drawer">
-            <summary>{{ section.title }} <span style="font-weight:400;font-size:0.8rem;color:var(--text-secondary)">{{ section.links | length }} 个项目</span></summary>
-            <div class="drawer-body">
-        {% for link in section.links %}
-        <a href="{{ link.url }}" class="res-card" target="_blank" rel="noopener">
-            <div class="res-icon">{{ link.icon }}</div>
-            <div class="res-info">
-                <span class="res-name">{{ link.name }}</span>
-                {% if link.tag %}<span class="res-badge tool">{{ link.tag }}</span>{% endif %}
-                {% if link.desc %}<div class="res-desc">{{ link.desc }}</div>{% endif %}
-            </div>
-            <span class="res-arrow">→</span>
-        </a>
-        {% endfor %}
-            </div>
-        </details>
-        {% endfor %}
+        {% if updates and updates.timeline %}
+            {% for e in updates.timeline %}
+                {% if loop.first or e.time[:10] != updates.timeline[loop.index0 - 1].time[:10] %}
+                    {% if not loop.first %}</div></details>{% endif %}
+                    <details class="drawer">
+                    <summary><span>{{ e.time[:10] }}</span><span style="font-weight:400;font-size:0.78rem;color:var(--text-secondary)">▸</span></summary>
+                    <div class="drawer-body">
+                {% endif %}
+                <div class="tl-card">
+                    <span class="tl-icon">{{ e.icon }}</span>
+                    <div class="tl-body">
+                        <div class="tl-head">
+                            <a class="tl-repo" href="{{ e.repo_url }}" target="_blank" rel="noopener">{{ e.repo.split('/')[-1] }}</a>
+                            {% if e.ref and e.type == 'PushEvent' %}<span class="tl-ref">{{ e.ref }}</span>{% endif %}
+                            <span class="tl-time">{{ e.time[11:] }}</span>
+                        </div>
+                        <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.15rem">{{ e.label }}</div>
+                        {% if e.messages %}
+                        <div class="tl-msgs">
+                            {% for msg in e.messages %}
+                            <div class="tl-msg">{{ msg }}</div>
+                            {% endfor %}
+                        </div>
+                        {% elif e.title %}
+                        <div class="tl-title">{% if e.action %}<strong>[{{ e.action }}]</strong> {% endif %}{{ e.title }}</div>
+                        {% elif e.detail %}
+                        <div class="tl-title">{{ e.detail }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if loop.last %}</div></details>{% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="tl-empty">暂无 GitHub 活动记录。<br><small>运行 <code>python OpenBlogger/Plugins/GitHubActivity/fetch.py --force</code> 更新数据</small></div>
+        {% endif %}
     </div>
 
     <button class="back-to-top" id="backToTop" title="返回顶部" aria-label="返回顶部">↑</button>
@@ -311,67 +282,6 @@
     !function(){const b=document.getElementById('backToTop');addEventListener('scroll',()=>b.classList.toggle('visible',scrollY>400));b.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}))}();
     !function(){document.body.classList.add('page-entering');addEventListener('load',function(){setTimeout(function(){document.body.classList.remove('page-entering')},700)});addEventListener('pageshow',function(e){if(e.persisted){document.body.classList.remove('page-exiting','page-entering');document.querySelectorAll('*').forEach(function(el){el.style.animation='none';el.offsetHeight;el.style.animation=''})}})}();
     if(location.protocol!=='file:')!function(){document.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;var h=a.getAttribute('href');if(!h||h[0]==='#'||h.indexOf('://')>0||h.indexOf('//')===0||a.target==='_blank')return;e.preventDefault();document.body.classList.add('page-exiting');setTimeout(function(){location.assign(h)},360)})}();
-
-    // ═══════════ GitHub 开源项目：实时从 API 加载 ═══════════
-    !function(){
-        var LANG_COLORS={"Python":"#3572A5","JavaScript":"#f1e05a","TypeScript":"#3178c6","HTML":"#e34c26","CSS":"#563d7c","Java":"#b07219","C++":"#f34b7d","C":"#555555","Go":"#00ADD8","Rust":"#dea584","Shell":"#89e051","Vue":"#41b883","Kotlin":"#A97BFF","Swift":"#F05138","Dart":"#00B4AB","Ruby":"#701516"};
-        function icon(l){if(!l)return'📂';if(l.indexOf('Python')>-1)return'🐍';if(l.indexOf('JavaScript')>-1||l.indexOf('TypeScript')>-1)return'📜';if(l.indexOf('HTML')>-1)return'🌐';if(l.indexOf('Vue')>-1)return'💚';if(l.indexOf('Go')>-1)return'🔵';if(l.indexOf('Rust')>-1)return'🦀';if(l.indexOf('Java')>-1)return'☕';return'📂'}
-        var CACHE_KEY='gh_repos_v2',CACHE_TTL=60*60*1000;
-        var container=document.getElementById('github-projects');
-        var countEl=document.getElementById('gh-repo-count');
-        var USER='YHSome';
-
-        function buildCard(r){
-            var lang=r.language||'';
-            var hasPages=!!r.has_pages;
-            var link=hasPages?'https://yhsome.github.io/'+r.name+'/':r.html_url;
-            var stars=r.stargazers_count||0;
-            var forks=r.forks_count||0;
-            var desc=r.description||'';
-            var h='<a href="'+link+'" class="res-card" target="_blank" rel="noopener">';
-            h+='<div class="res-icon">'+icon(lang)+'</div>';
-            h+='<div class="res-info">';
-            h+='<span class="res-name">'+r.name+'</span>';
-            if(desc) h+='<div class="res-desc">'+desc+'</div>';
-            h+='<div class="res-meta">';
-            if(lang) h+='<span class="res-lang"><span class="res-lang-dot" style="background:'+(LANG_COLORS[lang]||'#8b8b8b')+'"></span>'+lang+'</span>';
-            h+='<span>⭐ '+stars+'</span>';
-            h+='<span>🍴 '+forks+'</span>';
-            h+='<span class="res-badge '+(hasPages?'pages':'repo')+'">'+(hasPages?'GitHub Pages':'仓库')+'</span>';
-            h+='</div></div><span class="res-arrow">→</span></a>';
-            return h
-        }
-
-        async function load(){
-            var cached=localStorage.getItem(CACHE_KEY);
-            if(cached){try{var d=JSON.parse(cached);if(Date.now()-d.ts<CACHE_TTL){render(d.repos);return}}catch(e){}}
-            try{
-                var headers={};
-                var token='{{ github_token }}';
-                if(token) headers['Authorization']='Bearer '+token;
-                var resp=await fetch('https://api.github.com/users/'+USER+'/repos?sort=updated&per_page=50',{headers:headers});
-                if(!resp.ok) throw new Error('API '+resp.status);
-                var repos=await resp.json();
-                var own=repos.filter(function(r){return!r.fork});
-                localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),repos:own}));
-                render(own)
-            }catch(e){
-                if(cached){try{var cd=JSON.parse(cached);render(cd.repos)}catch(e2){}}
-                container.innerHTML='<div class="gh-error">⚠️ GitHub 数据加载失败，请稍后刷新重试<br><small>'+e.message+'</small></div>';
-                countEl.textContent='加载失败'
-            }
-        }
-
-        function render(repos){
-            if(!repos.length){container.innerHTML='<div class="gh-error">暂无公开仓库</div>';countEl.textContent='0 个仓库';return}
-            countEl.textContent=repos.length+' 个仓库';
-            var html='';
-            for(var i=0;i<repos.length;i++) html+=buildCard(repos[i]);
-            container.innerHTML=html
-        }
-
-        load()
-    }();
     </script>
 </body>
 </html>

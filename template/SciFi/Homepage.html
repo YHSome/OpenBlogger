@@ -327,12 +327,23 @@
                     <div class="sc-tags">{% for t in sidebar_tags %}<a href="{{ relative_root }}directory.html?tag={{ t.name | urlencode }}">{{ t.name }}:{{ t.count }}</a>{% endfor %}</div>
                 </div>
                 {% endif %}
-                {% if viewer_comment %}
-                <div class="side-card" style="max-height:200px;overflow:hidden;display:flex;flex-direction:column;">
-                    <div class="sc-title">信号流</div>
-                    <div style="flex:1;overflow:hidden;mask-image:linear-gradient(to bottom,transparent 0%,black 10%,black 90%,transparent 100%);">
-                        <div id="danmakuScroll" style="font-size:0.68rem;color:var(--text-secondary);font-family:'Cyber',monospace;animation:dmf 22s linear infinite;">…加载中…</div>
+                {% if updates and updates.timeline %}
+                <div class="side-card" style="max-height:250px;overflow:hidden;display:flex;flex-direction:column;">
+                    <div class="sc-title">// 近期更新</div>
+                    <div style="flex:1;overflow-y:auto;mask-image:linear-gradient(to bottom,black 85%,transparent 100%);font-size:0.68rem;color:var(--text-secondary);font-family:'Cyber',monospace">
+                    {% for e in updates.timeline[:5] %}
+                    <div style="padding:0.25rem 0;border-bottom:1px solid rgba(0,229,255,0.05)">
+                        <span>{{ e.icon }}</span>
+                        <a href="{{ e.repo_url }}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;font-weight:600">{{ e.repo.split('/')[-1] }}</a>
+                        <span style="display:block;font-size:0.6rem">{{ e.label }}{% if e.ref and e.type == 'PushEvent' %} → {{ e.ref }}{% endif %} // {{ e.time[:10] }}</span>
+                        {% if e.messages and e.messages[0] %}<span style="display:block;font-size:0.58rem;color:var(--accent3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px" title="{{ e.messages[0] }}">  {{ e.messages[0] }}</span>
+                        {% elif e.title %}<span style="display:block;font-size:0.58rem;color:var(--accent3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px" title="{{ e.title }}">  {% if e.action %}[{{ e.action }}] {% endif %}{{ e.title }}</span>
+                        {% elif e.detail %}<span style="display:block;font-size:0.58rem;color:var(--accent3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">  {{ e.detail }}</span>
+                        {% endif %}
                     </div>
+                    {% endfor %}
+                    </div>
+                    <div style="text-align:right;padding-top:0.3rem"><a href="{{ relative_root }}updates-page.html" style="font-size:0.65rem;color:var(--accent);text-decoration:none;font-family:'Cyber',monospace">&gt; VIEW_ALL</a></div>
                 </div>
                 {% endif %}
             </div>
@@ -366,15 +377,5 @@
     !function(){var t=document.getElementById('themeToggle'),b=document.documentElement,s=localStorage.getItem('blog-theme');if(s==='dark'||(!s&&matchMedia('(prefers-color-scheme:dark)').matches)){b.classList.add('dark');t.textContent='◑'}t.addEventListener('click',function(){var d=b.classList.toggle('dark');t.textContent=d?'◑':'◐';localStorage.setItem('blog-theme',d?'dark':'light')})}();
     setTimeout(function(){var p=document.getElementById('prismOverlay');if(p)p.remove()},900);
     </script>
-
-    {% if viewer_comment and max_page_id > 0 %}
-    <script id="dmConfig" data-max-pid="{{ max_page_id }}">window.ViewerConfig={user:'{{ viewer_user }}',secret:'{{ viewer_secret }}'};</script>
-    <script src="{{ relative_root }}js/viewer/comment.js"></script>
-    <script src="{{ relative_root }}js/viewer/counter.js"></script>
-    <script src="{{ relative_root }}js/viewer/unique.js"></script>
-    <script src="{{ relative_root }}js/viewer/global.js"></script>
-    <script>
-    !function(){var API='https://tinywebdb.appinventor.space/api',U=window.ViewerConfig&&window.ViewerConfig.user||'aaaaa',S=window.ViewerConfig&&window.ViewerConfig.secret||'d1bdf09a';function C(p){var b=new URLSearchParams({user:U,secret:S});Object.keys(p).forEach(function(k){b.append(k,p[k])});return fetch(API,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b.toString()}).then(function(r){return r.text()}).then(function(t){try{return JSON.parse(t)}catch(e){return t}})}function E(r,t){var v=r;if(Array.isArray(r)&&r[0]==='VALUE')v=r[2];else if(typeof r==='object'&&r!==null&&r[t]!==undefined)v=r[t];return v}function L(pid){var ct='comment_count_'+pid;return C({action:'get',tag:ct}).then(function(r){var c=parseInt(E(r,ct),10)||0;if(!c)return[];var ts=[];for(var i=1;i<=c;i++)ts.push(C({action:'get',tag:'comment_'+pid+'_'+i}));return Promise.all(ts).then(function(rs){return rs.map(function(r,i){var v=E(r,'comment_'+pid+'_'+(i+1));if(!v)return null;try{return typeof v==='string'?JSON.parse(v):v}catch(e){return null}}).filter(Boolean)})})}var mp=parseInt(document.getElementById('dmConfig').dataset.maxPid)||0,ac=[],sc=document.getElementById('danmakuScroll');if(mp&&sc){var pids=[];for(var i=1;i<=mp;i++)pids.push(i);!function B(i){if(i>=pids.length){if(ac.length){var d=ac.concat(ac);sc.innerHTML=d.map(function(c){var n=(c.name||'anon').replace(/</g,'&lt;'),b=(c.content||'').replace(/</g,'&lt;').substring(0,70);return'<div style=\"padding:0.3rem 0;border-bottom:1px solid rgba(0,229,255,0.05)\"><span style=\"color:var(--accent3);font-size:0.6rem\">'+n+'</span> '+b+'</div>'}).join('')}else sc.innerHTML='<div style=\"color:var(--text-secondary)\">[ NO SIGNAL ]</div>';return}var b=pids.slice(i,i+5);Promise.all(b.map(function(p){return L(p).catch(function(){return[]})})).then(function(rs){rs.forEach(function(cs){ac=ac.concat(cs)});B(i+5)})}(0)}</script>
-    {% endif %}
 </body>
 </html>
