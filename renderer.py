@@ -303,6 +303,7 @@ class BlogRenderer:
             "nl2br",              # 换行转 <br>
             "sane_lists",         # 更合理的列表处理
             "smarty",             # 智能引号
+            "md_in_html",         # 处理 HTML 标签内的 Markdown
         ]
         extension_configs = {
             "codehilite": {
