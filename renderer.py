@@ -294,8 +294,34 @@ class BlogRenderer:
     # ═══════════════════════════════════════════════
 
     @staticmethod
+    @staticmethod
     def md_to_html(md_text: str) -> str:
-        """将 Markdown 文本转换为 HTML（支持代码高亮、表格、脚注等扩展）。"""
+        """将 Markdown 文本转换为 HTML（支持代码高亮、表格、脚注等扩展）。
+
+        特别处理：<details> 标签内的 Markdown 会被单独渲染。
+        Python markdown 库的 md_in_html 不完全支持 <details>/<summary>。
+        """
+        # ── 预处理 <details> 块：单独提取内容渲染 ──
+        text = md_text
+        def _render_details(m):
+            tag_attrs = m.group(1) or ''
+            summary_match = re.search(r'<summary(\s[^>]*)?>(.*?)</summary>', m.group(2), re.DOTALL)
+            if summary_match:
+                summary_attrs = summary_match.group(1) or ''
+                summary_text = summary_match.group(2).strip()
+                body = m.group(2)[summary_match.end():].strip()
+            else:
+                summary_attrs = ''
+                summary_text = 'Details'
+                body = m.group(2).strip()
+            # 递归渲染 body 中的 Markdown
+            from markdown import Markdown as MD
+            _md = MD(extensions=['extra','codehilite','sane_lists','smarty'], output_format='html')
+            rendered_body = _md.convert(body)
+            return f'<details{tag_attrs}><summary{summary_attrs}>{summary_text}</summary>{rendered_body}</details>'
+
+        text = re.sub(r'<details(\s[^>]*)?>(.*?)</details>', _render_details, text, flags=re.DOTALL)
+
         extensions = [
             "extra",              # 表格、定义列表、脚注、缩写等
             "codehilite",         # 代码语法高亮
@@ -322,12 +348,11 @@ class BlogRenderer:
                 extension_configs=extension_configs,
                 output_format="html",
             )
-            html = md.convert(md_text)
+            html = md.convert(text)
             return html
         except Exception:
-            # Pygments 可能未安装，回退到基础渲染
             md = markdown.Markdown(extensions=["extra", "nl2br", "sane_lists"], output_format="html")
-            return md.convert(md_text)
+            return md.convert(text)
 
     # ═══════════════════════════════════════════════
     #  构建流程
