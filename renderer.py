@@ -217,6 +217,12 @@ class BlogRenderer:
         # 4) 标签 → 列表
         raw_tags = metadata.get("tag", "")
         metadata["tags"] = [t.strip() for t in re.split(r"[,，、\s]+", raw_tags) if t.strip()]
+        # 子目录名自动作为标签（Raw/项目/a.md → 自动加标签"项目"）
+        parent_dir = file_path.parent.relative_to(RAW_DIR)
+        if str(parent_dir) != ".":
+            folder_tag = str(parent_dir).replace("\\", "/").split("/")[0]  # 只取第一层目录名
+            if folder_tag and folder_tag not in metadata["tags"]:
+                metadata["tags"].append(folder_tag)
         if not metadata["tags"]:
             metadata["tags"] = ["未分类"]           # 无标签时默认"未分类"
 
@@ -371,7 +377,7 @@ class BlogRenderer:
         stats = {"rendered": 0, "skipped": 0, "errors": []}
 
         # Step 1: 扫描 Raw/ 目录中的 .md 文件
-        raw_files = sorted(RAW_DIR.glob("*.md"))
+        raw_files = sorted(RAW_DIR.rglob("*.md"))  # 递归扫描子目录
         if not raw_files:
             print("⚠️  Raw/ 目录中没有找到 .md 文件")
             return stats
