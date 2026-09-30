@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✦ Aurora 主题 v1.0 已创建</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 1 轮</p>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 目标</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>为 OpenBlogger 新建一套全新的渲染模板，命名为 <strong>Aurora</strong>（极光毛玻璃风格）</li>
+      <li>覆盖全部 7 类页面：首页、目录、标签、文章、资源、友链、更新动态</li>
+      <li>在保留原有数据接口（Viewer 计数/评论、GitHub 动态、友链项目）的前提下做一次彻底的视觉与交互升级</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 本次新建的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>base.html</strong>：共享基础模板——极光动态渐变背景 + 噪点纹理、毛玻璃导航栏（含移动端汉堡菜单）、深浅色模式（localStorage 记忆）、滚动显现动画、返回顶部、页面转场、全站访问统计 Footer</li>
+      <li><strong>Homepage.html</strong>：渐变 Hero 欢迎区 + 站点统计、即时搜索、最近文章卡片（悬停渐变边条 + 阅读全文提示）、精选项目网格、侧栏标签云与近期动态</li>
+      <li><strong>Directory.html</strong>：全站搜索 + 标签筛选（URL 同步）、可交互日历（有文章的日期可点击筛选）、按月份分组、侧栏标签导航</li>
+      <li><strong>Tag.html</strong>：按文章数缩放的字号标签云 + 手风琴式标签文章列表（默认展开第一个）</li>
+      <li><strong>Post.html</strong>：阅读进度条、自动目录（JS 生成 + 滚动高亮）、Markdown 全排版样式（表格/代码/引用/details/图片）、上下篇导航、完整评论表单与列表</li>
+      <li><strong>Resources.html</strong>：GitHub 项目卡片（语言色点、Star/Fork、Pages 徽标）+ 工具链接网格 + 近 7 天 GitHub 时间线</li>
+      <li><strong>FriendLinks.html</strong>：分组友链卡片（圆形头像、悬停箭头动画）</li>
+      <li><strong>Updates.html</strong>：动态概览统计卡 + 事件类型徽标 + 渐变时间线 + 按仓库分组的侧栏</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 执行与验证</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>模板目录：<code>template/Aurora/</code>，使用 Jinja2 模板继承（base + 7 页面），一处修改全站生效</li>
+      <li>执行 <code>python -m OpenBlogger.cli build --theme aurora --force</code>：<strong>61 篇文章全部渲染成功，0 错误</strong></li>
+      <li>Playwright + Edge 自动化质检：6 个列表页 + 文章页 + 移动端——<strong>0 断链、0 图片缺失、0 横向溢出</strong>，导航高亮/搜索/标签筛选/深浅色切换/移动菜单/阅读进度条全部通过</li>
+      <li>切换到新主题的命令：<code>python -m OpenBlogger.cli build --theme aurora</code></li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">4. 过程中解决的问题</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>Jinja2 3.1 移除了 <code>block()</code> 函数 → 改用 <code>self.nav_active()</code> 实现导航高亮</li>
+      <li>首页标题重复 → 调整 title block 为页面名 + 站点名拼接逻辑</li>
+      <li>标签字号公式反向 → 改为 0.78–1.15rem 区间随文章数递增</li>
+      <li>Viewer 脚本瞬时竞态 → 增加 <code>window.Viewer</code> 防御性初始化</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">5. 下一步优化方向</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>更新动态页 262 条事件太长 → 加"加载更多"分批展开</li>
+      <li>文章页增加阅读时长估算、正文图片灯箱</li>
+      <li>打印样式、老旧浏览器 color-mix 回退、SEO meta 补全</li>
+      <li>继续打磨动画节奏与移动端细节</li>
+    </ul>
+  </div>
+</body>
+</html>

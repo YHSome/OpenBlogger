@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v3.71 — 目录筛选支持浏览器前进/后退</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-16 ・ OpenBlogger 模板更新第 93 轮</p>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>目录页筛选状态纳入浏览器历史</strong>：标签、年份、日期三类筛选（含侧栏标签/年归档卡片/日历）从 replaceState 改为 pushState，每次筛选都会生成一条历史记录</li>
+      <li><strong>前进/后退完整恢复</strong>：新增 popstate 监听，回退时从 URL 一次性恢复标签、年份、日期、搜索词与全部 UI 状态（筛选条高亮、年卡片 aria-pressed、月份导航置灰、日历选中日、日历年份跳转），并重新执行过滤</li>
+      <li><strong>输入体验不受影响</strong>：搜索框逐字输入仍用 replaceState，不会因打字刷爆历史记录；只有确认操作（点击筛选）才入栈</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 全站回归（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>0 控制台错误 / 0 页面异常；57 篇文章全部渲染</li>
+      <li>专项验证：点标签「讲稿和征文」→ URL ?tag=…、12 篇可见；叠加年份 2026 → URL 追加 year、0 篇可见；后退 → 恢复到仅标签态（12 篇、标签 chip 高亮、年份 chip 清除）；前进 → 恢复 year=2026（年份 chip 高亮）</li>
+      <li>既有搜索高亮、最近搜索记忆、年归档卡片、日历、分批加载等全部功能回归通过</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 文件改动</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>template/Aurora/Directory.html：7 处筛选状态改为 history.pushState + 新增 popstate 全状态恢复逻辑</li>
+      <li>README.md：目录特性行同步更新</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">4. 下一步建议</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>首页新增最近更新动态横向滚动条</li>
+      <li>文章页正文引用块增加折叠长文能力</li>
+      <li>目录页筛选状态在离开/返回页面时保留（sessionStorage）</li>
+    </ul>
+  </div>
+</body>
+</html>

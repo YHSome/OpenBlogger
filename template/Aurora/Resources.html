@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block nav_active %}resources{% endblock %}
+{% block title %}资源{% endblock %}
+{% block description %}{{ site_title }}的资源收藏——GitHub 项目、在线工具与实用链接{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="container">
+        <div class="page-head" data-reveal>
+            <span class="kicker">Resources</span>
+            <h1>资源收藏</h1>
+            <p class="page-sub">GitHub 项目、在线工具与实用链接</p>
+        </div>
+
+        <a class="readme-banner glass card-hover" data-reveal href="readmes.html">
+            <span class="rb-ico">📖</span>
+            <span class="rb-info">
+                <span class="rb-title">项目 README</span>
+                <span class="rb-desc">阅读每个开源项目的 README 说明文档</span>
+            </span>
+            <span class="rb-arrow">→</span>
+        </a>
+
+        {% if projects %}
+        <!-- ═══════════ GitHub 项目 ═══════════ -->
+        <div class="res-head" data-reveal>
+            <div class="section-title" style="margin-bottom:0">GitHub 项目</div>
+            <button class="filter-chip" id="projSort">⭐ 按 Star 排序</button>
+        </div>
+        <div class="res-tools" data-reveal>
+            <div class="search-wrap" style="margin-bottom:0;flex:1">
+                <span class="search-ico">🔍</span>
+                <input type="text" id="resSearch" placeholder="搜索名称、描述或主题…" autocomplete="off" aria-label="搜索项目">
+                <button class="search-clear" id="resSearchClear" type="button" aria-label="清空搜索">✕</button>
+            </div>
+            <button class="filter-chip" id="resRandom" type="button" title="随机打开一个项目">🎲 随机项目</button>
+            <span class="res-count" id="resCount" aria-live="polite"></span>
+        </div>
+        <div class="chip-bar" id="projFilter" data-reveal>
+            <button class="filter-chip active" data-lang="">全部 <span class="count">{{ projects | length }}</span></button>
+            {% for lang in projects | map(attribute='language') | select | unique %}
+            <button class="filter-chip" data-lang="{{ lang }}">{{ lang }} <span class="count">{{ projects | selectattr('language', 'equalto', lang) | list | length }}</span></button>
+            {% endfor %}
+        </div>
+        <div class="project-grid">
+            {% for proj in projects %}
+            <a class="res-card glass card-hover" data-reveal href="{{ proj.link }}" target="_blank" rel="noopener"
+               data-lang="{{ proj.language }}" data-stars="{{ proj.stars }}" data-order="{{ loop.index }}">
+                <div class="res-card-top">
+                    <span class="res-icon">{{ proj.icon }}</span>
+                    <span class="res-name">{{ proj.name }}</span>
+                </div>
+                {% if proj.description %}<p class="res-desc">{{ proj.description }}</p>{% endif %}
+                <div class="res-card-bottom">
+                    {% if proj.language %}
+                    <span class="res-lang"><span class="lang-dot" style="background:{{ proj.lang_color }}"></span>{{ proj.language }}</span>
+                    {% endif %}
+                    <span class="res-stars">⭐ {{ proj.stars }}</span>
+                    <span class="res-forks">⑂ {{ proj.forks }}</span>
+                    {% if proj.updated_at %}<span class="res-updated">🕒 {{ proj.updated_at }}</span>{% endif %}
+                    {% if proj.has_pages %}<span class="res-pages">🌐 Pages</span>{% endif %}
+                </div>
+                {% if proj.topics %}
+                <div class="res-topics">
+                    {% for topic in proj.topics %}
+                    <span class="res-topic">#{{ topic }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if link_sections %}
+        <!-- ═══════════ 工具链接 ═══════════ -->
+        {% for section in link_sections %}
+        <div class="section-title" style="margin-top:2.6rem" data-reveal>{{ section.title }}</div>
+        <div class="link-grid">
+            {% for link in section.links %}
+            <a class="link-card glass card-hover" data-reveal href="{{ link.url }}" target="_blank" rel="noopener">
+                <span class="link-ico">{{ link.icon }}</span>
+                <span class="link-info">
+                    <span class="link-name">{{ link.name }}</span>
+                    {% if link.desc %}<span class="link-desc">{{ link.desc }}</span>{% endif %}
+                </span>
+                <span class="link-arrow">↗</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if updates and updates.timeline %}
+        <!-- ═══════════ 近期动态 ═══════════ -->
+        <div class="section-title" style="margin-top:2.6rem" data-reveal>近 7 天 GitHub 动态</div>
+        <div class="res-timeline glass" data-reveal>
+            {% for e in updates.timeline[:12] %}
+            <a class="tl-item" href="{{ e.repo_url }}" target="_blank" rel="noopener">
+                <span class="tl-icon">{{ e.icon }}</span>
+                <span class="tl-body">
+                    <span class="tl-repo">{{ e.repo.split('/')[-1] }}</span>
+                    <span class="tl-text">
+                        {{ e.label }}{% if e.ref and e.type == 'PushEvent' %} → {{ e.ref }}{% endif %}
+                        {% if e.messages and e.messages[0] %}「{{ e.messages[0] }}」{% elif e.title %}「{% if e.action %}{{ e.action }}: {% endif %}{{ e.title }}」{% elif e.detail %}{{ e.detail }}{% endif %}
+                    </span>
+                </span>
+                <span class="tl-time">{{ e.time[:10] }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        <div style="text-align:right;margin-top:0.8rem" data-reveal>
+            <a class="more-link" href="{{ relative_root }}updates-page.html" style="font-size:0.85rem;font-weight:600;color:var(--accent)">查看全部动态 →</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* ═══════════ README 入口横幅 ═══════════ */
+    .readme-banner {
+        display: flex; align-items: center; gap: 0.9rem; padding: 1rem 1.3rem;
+        color: var(--text); margin-bottom: 2rem;
+    }
+    .rb-ico {
+        width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+        background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+    }
+    .rb-info { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 0.05rem; }
+    .rb-title { font-size: 1rem; font-weight: 750; }
+    .rb-desc { font-size: 0.8rem; color: var(--text-3); }
+    .rb-arrow { color: var(--text-3); font-size: 1.2rem; transition: all 0.3s var(--ease); flex-shrink: 0; }
+    .readme-banner:hover .rb-arrow { color: var(--accent); transform: translateX(4px); }
+    .readme-banner:hover .rb-title { color: var(--accent); }
+
+    /* ═══════════ 项目标题行 ═══════════ */
+    .res-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+    .res-tools { display: flex; align-items: center; gap: 0.8rem; margin: 0 0 1.25rem; }
+    .res-tools .search-wrap input { padding-top: 0.7rem; padding-bottom: 0.7rem; font-size: 0.9rem; }
+    .res-count { font-size: 0.78rem; color: var(--text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+    /* ═══════════ GitHub 项目卡片 ═══════════ */
+    .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .res-card { display: flex; flex-direction: column; gap: 0.7rem; padding: 1.3rem 1.4rem; color: var(--text); min-height: 150px; }
+    .res-card-top { display: flex; align-items: center; gap: 0.8rem; }
+    .res-icon {
+        width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+        background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
+    }
+    .res-name { font-size: 1.05rem; font-weight: 800; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .res-desc { font-size: 0.85rem; color: var(--text-2); line-height: 1.6; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .res-card-bottom { display: flex; align-items: center; gap: 0.9rem; font-size: 0.78rem; color: var(--text-3); flex-wrap: wrap; }
+    .res-lang { display: inline-flex; align-items: center; gap: 0.35rem; }
+    .lang-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .res-pages { color: var(--ok); font-weight: 600; }
+    .res-updated { margin-left: auto; }
+    .res-topics { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .res-topic {
+        font-size: 0.7rem; font-weight: 600; color: var(--text-2);
+        background: var(--accent-soft); border-radius: 999px; padding: 0.12rem 0.55rem;
+        transition: all 0.25s;
+    }
+    .res-card:hover .res-topic { color: var(--accent); }
+    .res-card:hover .res-name { color: var(--accent); }
+
+    /* ═══════════ 链接网格 ═══════════ */
+    .link-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 1rem; }
+    .link-card {
+        display: flex; align-items: center; gap: 0.9rem; padding: 1rem 1.2rem;
+        color: var(--text); position: relative;
+    }
+    .link-ico {
+        width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+        background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .link-info { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 0.05rem; }
+    .link-name { font-size: 0.95rem; font-weight: 700; }
+    .link-desc { font-size: 0.76rem; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .link-arrow { color: var(--text-3); opacity: 0; transform: translate(-4px, 4px); transition: all 0.3s var(--ease); flex-shrink: 0; }
+    .link-card:hover .link-arrow { opacity: 1; transform: translate(0, 0); color: var(--accent); }
+    .link-card:hover .link-name { color: var(--accent); }
+
+    /* ═══════════ 时间线 ═══════════ */
+    .res-timeline { padding: 0.6rem 1.4rem; }
+    .tl-item {
+        display: flex; align-items: flex-start; gap: 1rem; padding: 0.85rem 0;
+        border-bottom: 1px dashed var(--border); color: var(--text);
+    }
+    .tl-item:last-child { border-bottom: none; }
+    .tl-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.15rem; }
+    .tl-body { display: flex; flex-direction: column; gap: 0.1rem; flex: 1; min-width: 0; }
+    .tl-repo { font-size: 0.88rem; font-weight: 700; color: var(--accent); }
+    .tl-text { font-size: 0.84rem; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tl-time { font-size: 0.74rem; color: var(--text-3); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+    .tl-item:hover .tl-text { color: var(--text); }
+
+    @media (max-width: 640px) {
+        .project-grid, .link-grid { grid-template-columns: 1fr; }
+        .res-tools { flex-direction: column; align-items: stretch; }
+        .tl-time { display: none; }
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* ═══════════ 项目按语言筛选 ═══════════ */
+(function(){
+    var bar = document.getElementById('projFilter');
+    if(!bar) return;
+    var cards = document.querySelectorAll('.project-grid .res-card');
+    var grid = document.querySelector('.project-grid');
+    var q = '';
+    var lang = '';
+    cards.forEach(function(c){
+        c.dataset.search = (c.textContent || '').toLowerCase();
+    });
+    function applyFilter(){
+        cards.forEach(function(c){
+            var hit = !q || (c.dataset.search || '').indexOf(q) > -1;
+            var langHit = !lang || c.dataset.lang === lang;
+            c.style.display = (hit && langHit) ? '' : 'none';
+        });
+        var count = Array.prototype.filter.call(cards, function(c){ return c.style.display !== 'none'; }).length;
+        var el = document.getElementById('resCount');
+        if(el) el.textContent = count + ' / ' + cards.length;
+    }
+    bar.addEventListener('click', function(e){
+        var chip = e.target.closest('.filter-chip');
+        if(!chip) return;
+        bar.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.toggle('active', c === chip); });
+        lang = chip.dataset.lang || '';
+        applyFilter();
+    });
+
+    var input = document.getElementById('resSearch');
+    var clearBtn = document.getElementById('resSearchClear');
+    if(input){
+        input.addEventListener('input', function(){
+            q = input.value.trim().toLowerCase();
+            if(clearBtn) clearBtn.classList.toggle('visible', !!q);
+            applyFilter();
+        });
+        if(clearBtn){
+            clearBtn.addEventListener('click', function(){
+                input.value = '';
+                q = '';
+                clearBtn.classList.remove('visible');
+                applyFilter();
+                input.focus();
+            });
+        }
+    }
+
+    var rnd = document.getElementById('resRandom');
+    if(rnd){
+        rnd.addEventListener('click', function(){
+            var vis = Array.prototype.slice.call(cards).filter(function(c){ return c.style.display !== 'none'; });
+            if(!vis.length) vis = Array.prototype.slice.call(cards);
+            var pick = vis[Math.floor(Math.random() * vis.length)];
+            if(pick && pick.href) window.open(pick.href, '_blank', 'noopener');
+        });
+    }
+
+    /* ═══════════ 按 Star 排序 ═══════════ */
+    var sortBtn = document.getElementById('projSort');
+    if(sortBtn && grid){
+        var starSorted = false;
+        sortBtn.addEventListener('click', function(){
+            starSorted = !starSorted;
+            var sorted = Array.prototype.slice.call(grid.querySelectorAll('.res-card'));
+            if(starSorted){
+                sorted.sort(function(a, b){
+                    return (parseInt(b.dataset.stars || 0, 10)) - (parseInt(a.dataset.stars || 0, 10));
+                });
+                sortBtn.textContent = '✓ 按 Star 排序中（点击恢复默认）';
+                sortBtn.classList.add('active');
+            } else {
+                sorted.sort(function(a, b){ return parseInt(a.dataset.order, 10) - parseInt(b.dataset.order, 10); });
+                sortBtn.textContent = '⭐ 按 Star 排序';
+                sortBtn.classList.remove('active');
+            }
+            sorted.forEach(function(c){ grid.appendChild(c); });
+        });
+    }
+    applyFilter();
+})();
+</script>
+{% endblock %}

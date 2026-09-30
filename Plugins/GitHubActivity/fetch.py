@@ -11,6 +11,7 @@ GitHubActivity 插件 — 抓取指定用户近七天的 GitHub 公开活动记�
     updates.json — 保存至本插件文件夹
 """
 
+import base64
 import json
 import sys
 import time
@@ -28,6 +29,7 @@ SITE_CONFIG  = PROJECT_ROOT / "site.json"
 PLUGIN_DIR   = Path(__file__).resolve().parent
 OUTPUT_FILE  = PLUGIN_DIR / "updates.json"
 CACHE_FILE   = PLUGIN_DIR / ".fetch_cache.json"
+README_FILE  = PLUGIN_DIR / "readmes.json"
 
 # ═══════════════════════════════════════════════════════
 #  工具函数
@@ -83,7 +85,7 @@ def api_request(url: str, token: str = "") -> dict | list:
     if token:
         headers["Authorization"] = f"Bearer {token}"
     req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req) as resp:
+    with urllib.request.urlopen(req, timeout=20) as resp:
         return json.loads(resp.read().decode())
 
 
@@ -97,6 +99,9 @@ def paginated_fetch(url_base: str, token: str, max_pages: int = 5) -> list:
             items = api_request(url, token)
         except urllib.error.HTTPError as e:
             print(f"⚠️  API 错误 (第{page}页): {e.code} {e.reason}")
+            break
+        except Exception as e:
+            print(f"⚠️  API 请求失败 (第{page}页): {e}")
             break
         if not isinstance(items, list) or not items:
             break
@@ -287,10 +292,8 @@ def enrich_push_events(events: list, token: str, days: int) -> list:
 #  主流程
 # ═══════════════════════════════════════════════════════
 
-def fetch_all_commits(user: str, token: str) -> list[dict]:
-    """拉取用户所有仓库的全部 commits（分页遍历每仓库最多 10 页），
-    生成时间线条目（与 Events API 格式一致）。"""
-    # 1. 获取所有仓库
+def fetch_repos(user: str, token: str) -> list[dict]:
+    """拉取用户全部公开仓库列表。"""
     repos_url = f"https://api.github.com/users/{user}/repos?sort=updated&per_page=100"
     try:
         repos = paginated_fetch(repos_url, token, max_pages=2)
@@ -300,7 +303,12 @@ def fetch_all_commits(user: str, token: str) -> list[dict]:
 
     if not isinstance(repos, list):
         return []
+    return repos
 
+
+def fetch_all_commits(repos: list[dict], token: str) -> list[dict]:
+    """基于仓库列表，拉取每个仓库的全部 commits（分页遍历每仓库最多 10 页），
+    生成时间线条目（与 Events API 格式一致）。"""
     print(f"   📦 共 {len(repos)} 个仓库，正在拉取全部 commit 记录…")
     all_entries = []
     seen_shas = set()
@@ -356,6 +364,43 @@ def fetch_all_commits(user: str, token: str) -> list[dict]:
     return all_entries
 
 
+def fetch_readmes(repos: list[dict], token: str) -> list[dict]:
+    """为每个仓库抓取 README.md 的原始 Markdown 内容（无 README 则跳过）。
+
+    统一走 GitHub Contents API（自动解析 README 文件名与默认分支），
+    单个仓库失败（限流 / 无 README / 网络超时）不会中断整体流程。
+    """
+    readmes = []
+    for repo in repos:
+        full_name = repo.get("full_name", "")
+        if not full_name:
+            continue
+        try:
+            data = api_request(f"https://api.github.com/repos/{full_name}/readme", token)
+        except Exception:
+            continue
+        if not isinstance(data, dict):
+            continue
+        content = data.get("content", "")
+        if not content:
+            continue
+        try:
+            readme_md = base64.b64decode(content).decode("utf-8", errors="replace")
+        except Exception:
+            continue
+        readmes.append({
+            "name": repo.get("name", full_name.split("/")[-1]),
+            "full_name": full_name,
+            "html_url": repo.get("html_url", f"https://github.com/{full_name}"),
+            "description": repo.get("description", "") or "",
+            "language": repo.get("language", "") or "",
+            "stars": repo.get("stargazers_count", 0),
+            "default_branch": repo.get("default_branch", ""),
+            "readme_md": readme_md,
+        })
+    return readmes
+
+
 def fetch(user: str = "YHSome", force: bool = False):
     """抓取 GitHub 全部公开活动事件并保存。"""
 
@@ -375,12 +420,38 @@ def fetch(user: str = "YHSome", force: bool = False):
     else:
         print("   ⚠️  未配置 token（60 次/小时），将只拉取公开数据")
 
-    # ── 阶段 1：拉取全部 commits（主力数据源，覆盖 180 天） ──
+    # ── 阶段 0：获取仓库列表 ──
+    repos = fetch_repos(user, token)
+
+    # ── 阶段 1：拉取各仓库 README（放在 commits 之前，优先占用限流额度） ──
+    if repos:
+        print(f"🔍 正在拉取各仓库 README…")
+        try:
+            readmes = fetch_readmes(repos, token)
+        except Exception as e:
+            print(f"   ⚠️  README 抓取异常: {e}，沿用上次数据")
+            readmes = []
+        if readmes:
+            try:
+                README_FILE.write_text(
+                    json.dumps({
+                        "meta": {"user": user, "fetched_at": datetime.now(timezone.utc).isoformat()},
+                        "readmes": readmes,
+                    }, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+                print(f"   📥 获取 {len(readmes)} 份 README → {README_FILE}")
+            except OSError as e:
+                print(f"   ⚠️  README 保存失败: {e}")
+        else:
+            print(f"   ⚠️  未获取到 README（可能被限流），沿用上次数据")
+
+    # ── 阶段 2：拉取全部 commits（主力数据源，覆盖 180 天） ──
     print(f"🔍 正在拉取 {user} 的全部 commit 记录…")
-    commit_entries = fetch_all_commits(user, token)
+    commit_entries = fetch_all_commits(repos, token)
     print(f"   📥 获取 {len(commit_entries)} 条 commit（去重后）")
 
-    # ── 阶段 2：拉取 Events API（补充 PR/Issue/Star/Fork 等非 commit 事件） ──
+    # ── 阶段 3：拉取 Events API（补充 PR/Issue/Star/Fork 等非 commit 事件） ──
     events_url = f"https://api.github.com/users/{user}/events?sort=created"
     print(f"🔍 正在拉取事件 API（PR/Issue/Star…）")
     try:

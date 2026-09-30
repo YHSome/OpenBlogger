@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ 最近更新改为「每渲染一次抓取一次」</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-16 ・ OpenBlogger 更新第 94 轮</p>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 问题定位</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>「最近更新」数据来自 GitHubActivity 插件抓取的 <strong>updates.json</strong>，之前只在你手动运行 fetch 脚本时才会更新</li>
+      <li>而 fetch 脚本自带 <strong>10 分钟缓存</strong>（.fetch_cache.json，非 --force 会跳过）；上次成功抓取停留在 2026-07-19，已过期约 4 周，导致首页侧栏与更新页长期显示旧动态</li>
+      <li>渲染器只负责读取 updates.json，从不主动触发抓取</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 本轮改动</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>每次渲染强制抓取一次</strong>：renderer.build() 新增 Step 0，调用插件 fetch(user, force=True)，绕过 10 分钟缓存，构建即刷新</li>
+      <li><strong>失败降级</strong>：网络异常/超限时打印警告并沿用上次 updates.json，不会中断构建</li>
+      <li><strong>用户可配置</strong>：GitHub 用户名读取 site.json 的 github_user（默认 YHSome）</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 验证结果</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>连续两次构建均触发抓取（🔃 正在抓取 → ✅ 已保存），确认"每渲染一次抓取一次"</li>
+      <li>本次抓取：<strong>397 条活动、16 个仓库、387 次提交</strong>（PushEvent 387、WatchEvent 3、CreateEvent 2、PullRequestEvent 2、PublicEvent 1、ForkEvent 1、ReleaseEvent 1），fetched_at 更新为 2026-08-16</li>
+      <li>更新页统计卡（397/16/387）、首页「抓取于 2026-08-16」均已刷新；全站回归 0 错误、0 横向溢出</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">4. 文件改动</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>OpenBlogger/renderer.py：build() 新增 Step 0 强制抓取 + _refresh_updates() 方法（失败降级）</li>
+      <li>OpenBlogger/Plugins/GitHubActivity/__init__.py：修正过时用法说明</li>
+      <li>README.md：更新动态特性行同步更新</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">5. 注意事项</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>未配置 github_token 时使用匿名 API（60 次/小时）；每次构建都抓取会消耗额度，建议在 site.json 配置 github_token（5000 次/小时）或按需控制构建频率</li>
+    </ul>
+  </div>
+</body>
+</html>

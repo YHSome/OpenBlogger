@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block nav_active %}friends{% endblock %}
+{% block title %}友链{% endblock %}
+{% block description %}{{ site_title }}的友情链接——好友站点与常用工具{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="container">
+        <div class="page-head" data-reveal>
+            <span class="kicker">Friends</span>
+            <h1>友情链接</h1>
+            <p class="page-sub">我的好朋友与常用工具</p>
+        </div>
+
+        <div class="search-wrap" data-reveal>
+            <span class="search-ico">🔍</span>
+            <input type="text" id="flSearch" placeholder="搜索友链名称或描述…" autocomplete="off" aria-label="搜索友链">
+            <button class="search-clear" id="flSearchClear" type="button" aria-label="清空搜索">✕</button>
+        </div>
+        <div class="search-count" id="flCount" aria-live="polite"></div>
+        <div class="chip-bar" id="flFilter" data-reveal></div>
+
+        {% if friend_link_sections %}
+            {% for section in friend_link_sections %}
+            <div class="fl-group" data-group="{{ section.title }}">
+                <div class="section-title" {% if not loop.first %}style="margin-top:2.6rem"{% endif %} data-reveal>{{ section.title }}</div>
+                <div class="fl-grid">
+                    {% for link in section.links %}
+                    <a class="fl-card glass card-hover" data-reveal href="{{ link.url }}" target="_blank" rel="noopener">
+                        <span class="fl-avatar">{{ link.icon | safe }}</span>
+                        <span class="fl-info">
+                            <span class="fl-name">{{ link.name }}</span>
+                            {% if link.desc %}<span class="fl-desc">{{ link.desc }}</span>{% endif %}
+                        </span>
+                        <span class="fl-arrow">↗</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state glass"><span class="empty-ico">🤝</span>暂无友链</div>
+        {% endif %}
+
+        <div class="fl-cta glass" data-reveal>
+            <div class="fl-cta-info">
+                <div class="fl-cta-title">🤝 申请友链</div>
+                <p class="fl-cta-desc">想和我交换友链？发邮件到 <a href="mailto:949727232@qq.com">949727232@qq.com</a>，附上你的站点名称、简介和链接即可，我会尽快添加。</p>
+            </div>
+            <a class="fl-cta-btn" href="mailto:949727232@qq.com">发送申请 →</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
+    .fl-card.hidden { display: none; }
+    .fl-group.hidden { display: none; }
+    .fl-card {
+        display: flex; align-items: center; gap: 0.9rem; padding: 1.1rem 1.2rem;
+        color: var(--text); position: relative;
+    }
+    .fl-avatar {
+        width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--accent-soft); font-size: 1.35rem; overflow: hidden;
+    }
+    .fl-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .fl-info { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 0.05rem; }
+    .fl-name { font-size: 0.98rem; font-weight: 750; }
+    .fl-desc { font-size: 0.76rem; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fl-arrow { color: var(--text-3); opacity: 0; transform: translate(-4px, 4px); transition: all 0.3s var(--ease); }
+    .fl-card:hover .fl-arrow { opacity: 1; transform: translate(0, 0); color: var(--accent); }
+    .fl-card:hover .fl-name { color: var(--accent); }
+    .fl-card:hover .fl-avatar { box-shadow: 0 0 0 3px var(--accent-soft); }
+
+    /* ═══════════ 申请友链 ═══════════ */
+    .fl-cta {
+        margin-top: 2.6rem; padding: 1.6rem 1.8rem;
+        display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap;
+        background: linear-gradient(135deg, var(--accent-soft), var(--accent-soft-2));
+    }
+    .fl-cta-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 0.35rem; }
+    .fl-cta-desc { color: var(--text-2); font-size: 0.9rem; line-height: 1.7; max-width: 520px; }
+    .fl-cta-btn {
+        padding: 0.7rem 1.7rem; font-size: 0.92rem; font-weight: 700; color: #fff;
+        background: var(--grad); border-radius: 999px; transition: all 0.25s; white-space: nowrap;
+    }
+    .fl-cta-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+    @media (max-width: 640px) {
+        .fl-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* ═══════════ 友链搜索 + 分组筛选 ═══════════ */
+(function(){
+    var groups = document.querySelectorAll('.fl-group');
+    if(!groups.length) return;
+    var cards = document.querySelectorAll('.fl-card');
+    var input = document.getElementById('flSearch');
+    var clearBtn = document.getElementById('flSearchClear');
+    var countEl = document.getElementById('flCount');
+    var bar = document.getElementById('flFilter');
+    var q = '';
+    var group = '';
+    cards.forEach(function(c){
+        c.dataset.search = (c.textContent || '').toLowerCase();
+    });
+    var all = document.createElement('button');
+    all.type = 'button';
+    all.className = 'filter-chip active';
+    all.dataset.group = '';
+    all.textContent = '全部 ' + cards.length;
+    bar.appendChild(all);
+    groups.forEach(function(g){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'filter-chip';
+        b.dataset.group = g.dataset.group;
+        b.textContent = g.dataset.group + ' ' + g.querySelectorAll('.fl-card').length;
+        bar.appendChild(b);
+    });
+    bar.addEventListener('click', function(e){
+        var chip = e.target.closest('.filter-chip');
+        if(!chip) return;
+        bar.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.toggle('active', c === chip); });
+        group = chip.dataset.group || '';
+        apply();
+    });
+    function apply(){
+        var visible = 0;
+        cards.forEach(function(c){
+            var hit = !q || (c.dataset.search || '').indexOf(q) > -1;
+            var groupHit = !group || c.closest('.fl-group').dataset.group === group;
+            var show = hit && groupHit;
+            c.classList.toggle('hidden', !show);
+            if(show) visible++;
+        });
+        groups.forEach(function(g){
+            var any = Array.prototype.some.call(g.querySelectorAll('.fl-card'), function(c){ return !c.classList.contains('hidden'); });
+            g.classList.toggle('hidden', !any);
+        });
+        if(countEl){
+            if(q || group){
+                countEl.textContent = visible + ' / ' + cards.length;
+                countEl.classList.add('visible');
+            } else {
+                countEl.classList.remove('visible');
+            }
+        }
+    }
+    if(input){
+        input.addEventListener('input', function(){
+            q = input.value.trim().toLowerCase();
+            if(clearBtn) clearBtn.classList.toggle('visible', !!q);
+            apply();
+        });
+        if(clearBtn){
+            clearBtn.addEventListener('click', function(){
+                input.value = '';
+                q = '';
+                clearBtn.classList.remove('visible');
+                apply();
+                input.focus();
+            });
+        }
+    }
+})();
+
+/* ═══════════ 友链头像加载失败兜底 ═══════════ */
+(function(){
+    document.querySelectorAll('.fl-avatar img').forEach(function(img){
+        img.addEventListener('error', function(){
+            var fallback = document.createElement('span');
+            fallback.className = 'fl-fallback';
+            fallback.textContent = '👤';
+            img.replaceWith(fallback);
+        });
+        /* 已失败的（complete && naturalWidth===0）立即兜底 */
+        if(img.complete && img.naturalWidth === 0){
+            img.dispatchEvent(new Event('error'));
+        }
+    });
+})();
+</script>
+{% endblock %}

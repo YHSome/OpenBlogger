@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v3.39 — 快捷跳转与播报</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 60 轮</p>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>灯箱数字键跳转</strong>：按 1–9 直接跳到第 N 张图片（实测按 4 → 4/6）</li>
+      <li><strong>筛选结果无障碍播报</strong>：目录搜索结果、更新页类型筛选结果、首页搜索结果区域加 <code>aria-live="polite"</code>，屏幕阅读器自动播报数量变化</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>数字键跳转 4/6；aria-live 属性齐全</li>
+      <li>全站 0 控制台错误</li>
+    </ul>
+  </div>
+</body>
+</html>

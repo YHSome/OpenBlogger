@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v2.7 — 检索与目录体验</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 18 轮</p>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>目录页 · 标题命中徽标</strong>：搜索时标题直接匹配的文章显示"标题命中"徽标，快速区分高相关结果</li>
+      <li><strong>文章页 · 目录自动跟随</strong>：滚动时当前章节的目录项自动滚入侧栏可视区（长文 88 项目录不再迷失）</li>
+      <li><strong>目录页 · 日历回到今天</strong>：日历下方新增"回到今天"按钮，一键复位当月视图</li>
+      <li><strong>文章页 · 目录文字净化</strong>：彻底去除 Markdown 生成的 "¶" 与锚点 "#" 残留符号</li>
+      <li><strong>移动菜单无障碍</strong>：汉堡按钮与菜单面板建立 aria-controls 关联</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>搜索"红楼"：3 篇文章显示"标题命中"徽标</li>
+      <li>滚动到第 10 个章节：对应目录项激活且完整位于侧栏可视区内</li>
+      <li>"回到今天"按钮正确复位到当前年月</li>
+      <li>88 个目录链接尾部符号残留数：0</li>
+      <li>全站 0 控制台错误</li>
+    </ul>
+  </div>
+</body>
+</html>

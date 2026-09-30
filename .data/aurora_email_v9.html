@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v1.8 — 数据可视化收尾</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 9 轮</p>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>更新动态页 · 仓库活跃度条形图</strong>：按事件数降序展示 Top 6 仓库，渐变条形 + 入场动画，一眼看清开发重心</li>
+      <li><strong>文章页 · 长代码换行</strong>：行内代码长 URL/字符串自动断行，窄屏不溢出</li>
+      <li><strong>目录页 · 月份跳转链接净化</strong>：去除 javascript: 伪协议，消除无效链接告警</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>活跃度条形图：yhsome.github.io 139 事件（100%）、OpenBlogger 40（28.8%）、Viewer 25（18%）……排序正确且动画正常</li>
+      <li>全站最终回归：55 篇文章 + 7 独立页共 62 页，<strong>0 断链、0 图片缺失、0 横向溢出、0 控制台错误</strong></li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 阶段小结（9 轮累计）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>Aurora 主题 9 个模板文件，40+ 项功能优化，纯 HTML/CSS/原生 JS，零外部依赖</li>
+      <li>使用：<code>python -m OpenBlogger.cli build --theme aurora --force</code></li>
+      <li>回复"继续"即可进入下一轮迭代，我会继续打磨</li>
+    </ul>
+  </div>
+</body>
+</html>

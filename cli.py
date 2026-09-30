@@ -31,13 +31,15 @@ from OpenBlogger.renderer import BlogRenderer, RENDERED_DIR, RAW_DIR
 
 def cmd_build(args):
     """构建站点。"""
+    config = _load_config(args.config)
+    theme = args.theme or config.get("theme", "default")
     print(f"🔨 OpenBlogger 正在构建站点…")
-    print(f"   主题: {args.theme}")
+    print(f"   主题: {theme}")
     print(f"   源文件: {RAW_DIR}")
     print(f"   输出: {RENDERED_DIR}")
     print()
 
-    renderer = BlogRenderer(theme=args.theme, config=_load_config(args.config))
+    renderer = BlogRenderer(theme=theme, config=config)
     stats = renderer.build(force=args.force)
 
     print()
@@ -52,8 +54,10 @@ def cmd_build(args):
 def cmd_serve(args):
     """启动本地预览服务器，自动在浏览器中打开。"""
     # 先构建站点
+    config = _load_config(args.config)
+    theme = args.theme or config.get("theme", "default")
     print("🔨 预览前先构建…")
-    renderer = BlogRenderer(theme=args.theme, config=_load_config(args.config))
+    renderer = BlogRenderer(theme=theme, config=config)
     stats = renderer.build(force=False)
     print(f"   渲染 {stats['rendered']} 篇，跳过 {stats['skipped']} 篇\n")
 
@@ -188,7 +192,7 @@ def main():
 
     # ── build ──
     build_parser = subparsers.add_parser("build", help="构建站点")
-    build_parser.add_argument("--theme", "-t", default="default", help="模板主题名称 (默认: default)")
+    build_parser.add_argument("--theme", "-t", default=None, help="模板主题名称 (默认: site.json 的 theme 或 default)")
     build_parser.add_argument("--force", "-f", action="store_true", help="强制全量重建（忽略缓存）")
     build_parser.add_argument("--config", "-c", default=None, help="站点配置文件路径 (JSON)")
     build_parser.set_defaults(func=cmd_build)
@@ -196,19 +200,19 @@ def main():
     # ── serve ──
     serve_parser = subparsers.add_parser("serve", help="启动本地预览服务器")
     serve_parser.add_argument("--port", "-p", type=int, default=8080, help="服务器端口 (默认: 8080)")
-    serve_parser.add_argument("--theme", "-t", default="default", help="模板主题名称 (默认: default)")
+    serve_parser.add_argument("--theme", "-t", default=None, help="模板主题名称 (默认: site.json 的 theme 或 default)")
     serve_parser.add_argument("--config", "-c", default=None, help="站点配置文件路径 (JSON)")
     serve_parser.set_defaults(func=cmd_serve)
 
     # ── watch ──
     watch_parser = subparsers.add_parser("watch", help="监视文件变化自动重建")
-    watch_parser.add_argument("--theme", "-t", default="default", help="模板主题名称 (默认: default)")
+    watch_parser.add_argument("--theme", "-t", default=None, help="模板主题名称 (默认: site.json 的 theme 或 default)")
     watch_parser.add_argument("--config", "-c", default=None, help="站点配置文件路径 (JSON)")
     watch_parser.set_defaults(func=cmd_watch)
 
     # ── clean ──
     clean_parser = subparsers.add_parser("clean", help="清空渲染输出")
-    clean_parser.add_argument("--theme", "-t", default="default", help="模板主题名称 (默认: default)")
+    clean_parser.add_argument("--theme", "-t", default=None, help="模板主题名称 (默认: site.json 的 theme 或 default)")
     clean_parser.set_defaults(func=cmd_clean)
 
     args = parser.parse_args()

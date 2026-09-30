@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v1.7 — SEO 结构化数据</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 8 轮</p>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>首页 · WebSite JSON-LD</strong>：站点名、描述、站内搜索 SearchAction 结构化数据，利于 Google 富媒体结果</li>
+      <li><strong>文章页 · BlogPosting JSON-LD</strong>：标题、发布日期（ISO 格式）、作者、摘要结构化数据；渲染器补充了 <code>raw_date</code> 上下文变量</li>
+      <li><strong>文章页 · og:type=article</strong>：Open Graph 类型改为文章</li>
+      <li><strong>评论表单无障碍</strong>：昵称/邮箱/内容输入框补充 aria-label</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>首页 JSON-LD 解析成功：WebSite + SearchAction 完整</li>
+      <li>文章 JSON-LD 解析成功：BlogPosting，datePublished=2026-08-13，author=YHSome</li>
+      <li>构建 62 页 0 错误，0 控制台异常</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 累计状态</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>Aurora 主题共 9 个模板（base + 8 页面），8 轮累计 30+ 项功能与优化</li>
+      <li>命令：<code>python -m OpenBlogger.cli build --theme aurora --force</code></li>
+      <li>收到本邮件后回复"继续"，我会进入下一轮打磨</li>
+    </ul>
+  </div>
+</body>
+</html>

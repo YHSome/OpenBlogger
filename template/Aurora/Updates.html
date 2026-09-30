@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+{% block nav_active %}updates{% endblock %}
+{% block title %}更新动态{% endblock %}
+{% block description %}{{ site_title }}的 GitHub 更新动态——代码提交、Issue 与仓库活动{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="container">
+        <div class="page-head" data-reveal>
+            <span class="kicker">Changelog</span>
+            <h1>更新动态</h1>
+            <p class="page-sub">GitHub 上的代码足迹</p>
+        </div>
+
+        {% if updates and updates.summary %}
+        <!-- ═══════════ 概览统计 ═══════════ -->
+        <div class="upd-stats" data-reveal>
+            <div class="upd-stat glass card-hover"><strong data-count="{{ updates.summary.total_events }}">0</strong><span>事件</span></div>
+            <div class="upd-stat glass card-hover"><strong data-count="{{ updates.summary.total_repos }}">0</strong><span>仓库</span></div>
+            <div class="upd-stat glass card-hover"><strong data-count="{{ updates.summary.total_commits }}">0</strong><span>提交</span></div>
+        </div>
+
+        {% if updates.summary.by_type %}
+        <div class="chip-bar" style="margin-top:1.2rem" data-reveal>
+            {% for t in updates.summary.by_type %}
+            <button class="filter-chip type-chip" data-type="{{ t.type }}" type="button">{{ t.type }} <span class="count">{{ t.count }}</span></button>
+            {% endfor %}
+        </div>
+        <div class="type-result" id="typeResult" aria-live="polite"></div>
+        <div class="chip-bar" id="repoFilter" data-reveal></div>
+        {% endif %}
+        {% endif %}
+
+        <div class="layout-2col">
+            <!-- ═══════════ 时间线 ═══════════ -->
+            <main>
+                <div class="section-title" data-reveal>时间线</div>
+                {% if updates and updates.timeline %}
+                <div class="upd-timeline" data-reveal>
+                    {% for e in updates.timeline %}
+                    <div class="upd-entry" data-role="tl-entry" data-type="{{ e.type }}" data-repo="{{ e.repo }}">
+                        <div class="upd-dot"></div>
+                        <div class="upd-card glass card-hover">
+                            <a class="upd-card-head" href="{{ e.repo_url }}" target="_blank" rel="noopener">
+                                <span class="upd-ico">{{ e.icon }}</span>
+                                <span class="upd-repo">{{ e.repo }}</span>
+                                <span class="upd-time">{{ e.time }}</span>
+                            </a>
+                            {% if e.messages and e.messages[0] %}
+                            <p class="upd-msg" title="{{ e.messages[0] }}">{{ e.messages[0] }}</p>
+                            {% elif e.title %}
+                            <p class="upd-msg" title="{{ e.title }}">{% if e.action %}[{{ e.action }}] {% endif %}{{ e.title }}</p>
+                            {% elif e.detail %}
+                            <p class="upd-msg" title="{{ e.detail }}">{{ e.detail }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if updates.timeline | length > 40 %}
+                <div style="text-align:center;margin-top:1.2rem">
+                    <button class="load-more" id="tlMore">展开更多动态 (共 {{ updates.timeline | length }} 条)</button>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="empty-state glass"><span class="empty-ico">📭</span>暂无动态数据</div>
+                {% endif %}
+            </main>
+
+            <!-- ═══════════ 按仓库分组 ═══════════ -->
+            <aside class="sidebar">
+                {% if updates and updates.by_repo %}
+                <div class="widget glass" data-reveal>
+                    <div class="widget-title">仓库分布</div>
+                    <div class="repo-list">
+                        {% for repo, data in updates.by_repo.items() %}
+                        <div class="repo-item" data-repo="{{ repo }}" title="{{ repo }}">
+                            <a class="repo-link" href="{{ data.url }}" target="_blank" rel="noopener" aria-label="打开 {{ repo }}">
+                                <span class="repo-name">{{ repo.split('/')[-1] }}</span>
+                                <span class="repo-count">{{ data.event_count }} 事件</span>
+                            </a>
+                            <button class="repo-filter-btn" type="button" title="只看此仓库动态" aria-label="只看 {{ repo }}">◎</button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="widget glass" data-reveal>
+                    <div class="widget-title">仓库活跃度</div>
+                    <div class="repo-activity" id="repoActivity"></div>
+                </div>
+                {% endif %}
+                {% if updates and updates.fetched_at %}
+                <div class="widget glass" data-reveal>
+                    <div class="widget-title">数据状态</div>
+                    <div class="stat-rows">
+                        <div class="stat-row"><span>最近抓取</span><strong class="mono">{{ updates.fetched_at[:10] }}</strong></div>
+                    </div>
+                </div>
+                {% endif %}
+            </aside>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ═══════════ 统计卡 ═══════════ */
+    .upd-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    .upd-stat { padding: 1.2rem 1.4rem; display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
+    .upd-stat strong { font-size: 1.9rem; font-weight: 850; background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-variant-numeric: tabular-nums; }
+    .upd-stat span { font-size: 0.8rem; color: var(--text-3); }
+
+    /* ═══════════ 事件类型彩色徽标 ═══════════ */
+    .type-chip[data-type="PushEvent"] { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); border-color: transparent; }
+    .type-chip[data-type="CreateEvent"] { color: #38bdf8; background: rgba(56, 189, 248, 0.12); border-color: transparent; }
+    .type-chip[data-type="WatchEvent"] { color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); border-color: transparent; }
+    .type-chip[data-type="IssuesEvent"] { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); border-color: transparent; }
+    .type-chip[data-type="PublicEvent"] { color: var(--accent-3); background: color-mix(in srgb, var(--accent-3) 12%, transparent); border-color: transparent; }
+    .type-chip.active { color: #fff !important; background: var(--grad) !important; }
+    .type-result { font-size: 0.8rem; color: var(--text-3); margin: -0.5rem 0 1.2rem; }
+
+    /* ═══════════ 时间线 ═══════════ */
+    .upd-timeline { position: relative; padding-left: 1.6rem; }
+    .upd-timeline::before {
+        content: ''; position: absolute; left: 6px; top: 8px; bottom: 8px;
+        width: 2px; background: linear-gradient(var(--accent), var(--accent-2), var(--accent-3));
+        border-radius: 2px; opacity: 0.4;
+    }
+    .upd-entry { position: relative; margin-bottom: 1.1rem; }
+    .upd-day {
+        position: relative; z-index: 1; display: inline-block;
+        font-size: 0.78rem; font-weight: 800; color: var(--text-2);
+        background: var(--bg); border: 1px solid var(--border-strong);
+        padding: 0.2rem 0.8rem; border-radius: 999px;
+        margin-bottom: 0.9rem; letter-spacing: 0.02em;
+    }
+    .upd-dot {
+        position: absolute; left: -1.6rem; top: 1.15rem;
+        width: 14px; height: 14px; border-radius: 50%;
+        background: var(--card-strong); border: 3px solid var(--accent);
+        box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+    .upd-card { padding: 1rem 1.3rem; }
+    .upd-card-head { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .upd-ico { font-size: 1rem; }
+    .upd-repo { font-size: 0.92rem; font-weight: 750; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .upd-card:hover .upd-repo { color: var(--accent); }
+    .upd-time { font-size: 0.72rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+    .upd-msg { margin-top: 0.45rem; font-size: 0.86rem; color: var(--text-2); line-height: 1.6; }
+    .upd-msg {
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .upd-msg.expanded { -webkit-line-clamp: unset; }
+    .upd-card.flash { box-shadow: 0 0 0 3px var(--accent), var(--shadow-lg); }
+    .upd-card { transition: box-shadow 0.3s; }
+    .load-more {
+        padding: 0.65rem 1.8rem; font-size: 0.9rem; font-weight: 700; color: var(--accent);
+        background: var(--accent-soft); border: 1px solid var(--border); border-radius: 999px;
+        transition: all 0.25s;
+    }
+    .load-more:hover { color: #fff; background: var(--grad); border-color: transparent; transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+    /* ═══════════ 仓库分布 ═══════════ */
+    .repo-list { display: flex; flex-direction: column; max-height: 420px; overflow-y: auto; }
+    .repo-item {
+        display: flex; align-items: center; gap: 0.4rem;
+        padding: 0.6rem 0.1rem; border-bottom: 1px solid var(--border); color: var(--text);
+    }
+    .repo-link {
+        display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+        flex: 1; min-width: 0; color: var(--text);
+    }
+    .repo-filter-btn {
+        flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%;
+        border: 1px solid var(--border); background: var(--card-strong);
+        color: var(--text-3); font-size: 0.72rem; line-height: 1;
+        display: inline-flex; align-items: center; justify-content: center;
+        transition: all 0.25s;
+    }
+    .repo-filter-btn:hover { color: var(--accent); border-color: var(--accent); transform: scale(1.08); }
+    .repo-item.active .repo-filter-btn { background: var(--accent); color: #fff; border-color: transparent; }
+    .repo-item:last-child { border-bottom: none; }
+    .repo-name { font-size: 0.88rem; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .repo-count { font-size: 0.72rem; color: var(--text-3); flex-shrink: 0; }
+    .repo-item:hover .repo-name { color: var(--accent); }
+    .repo-item.active { background: var(--accent-soft); border-radius: var(--radius-xs); padding-left: 0.6rem; padding-right: 0.6rem; }
+    .repo-item.linked { background: var(--accent-soft); border-radius: var(--radius-xs); }
+
+    /* ═══════════ 仓库活跃度条形图 ═══════════ */
+    .repo-activity { display: flex; flex-direction: column; gap: 0.65rem; }
+    .act-row { display: grid; grid-template-columns: minmax(0, 1fr) 62% 2rem; align-items: center; gap: 0.6rem; }
+    .act-name { font-size: 0.78rem; font-weight: 650; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .act-bar-wrap { height: 8px; border-radius: 999px; background: var(--accent-soft); overflow: hidden; }
+    .act-bar { display: block; height: 100%; border-radius: 999px; background: var(--grad); opacity: 0.85; transition: width 0.8s var(--ease); }
+    .act-count { font-size: 0.7rem; color: var(--text-3); text-align: right; font-variant-numeric: tabular-nums; }
+    .act-row { border-radius: var(--radius-xs); transition: background 0.25s; padding: 0.2rem 0.4rem; margin: -0.2rem -0.4rem; }
+    .act-row:hover, .act-row.linked-row { background: var(--accent-soft); }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* ═══════════ 概览统计数字滚动动画 ═══════════ */
+(function(){
+    document.querySelectorAll('.upd-stat strong[data-count]').forEach(function(el){
+        var target = parseInt(el.dataset.count, 10) || 0;
+        var start = null;
+        var dur = 800;
+        function step(ts){
+            if(!start) start = ts;
+            var p = Math.min(1, (ts - start) / dur);
+            var eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.round(target * eased);
+            if(p < 1) requestAnimationFrame(step);
+            else el.textContent = target;
+        }
+        requestAnimationFrame(step);
+    });
+})();
+
+/* ═══════════ 仓库列表按事件数降序 ═══════════ */
+(function(){
+    var list = document.querySelector('.repo-list');
+    if(!list) return;
+    var items = Array.prototype.slice.call(list.querySelectorAll('.repo-item'));
+    items.sort(function(a, b){
+        var ca = parseInt(a.querySelector('.repo-count').textContent, 10) || 0;
+        var cb = parseInt(b.querySelector('.repo-count').textContent, 10) || 0;
+        return cb - ca;
+    });
+    items.forEach(function(it){ list.appendChild(it); });
+})();
+
+/* ═══════════ 仓库活跃度条形图（从仓库列表生成） ═══════════ */
+(function(){
+    var box = document.getElementById('repoActivity');
+    if(!box) return;
+    var items = document.querySelectorAll('.repo-item');
+    var data = [];
+    items.forEach(function(it){
+        var name = it.querySelector('.repo-name');
+        var count = it.querySelector('.repo-count');
+        if(!name || !count) return;
+        data.push({
+            name: name.textContent.trim(),
+            count: parseInt(count.textContent, 10) || 0
+        });
+    });
+    if(!data.length) return;
+    data.sort(function(a, b){ return b.count - a.count; });
+    data = data.slice(0, 6);
+    var max = Math.max.apply(null, data.map(function(d){ return d.count; })) || 1;
+    box.innerHTML = data.map(function(d){
+        var w = Math.round(d.count / max * 1000) / 10;
+        return '<div class="act-row">' +
+            '<span class="act-name" title="' + d.name + ' · ' + d.count + ' 次事件">' + d.name + '</span>' +
+            '<span class="act-bar-wrap"><span class="act-bar" data-w="' + w + '"></span></span>' +
+            '<span class="act-count">' + d.count + '</span></div>';
+    }).join('');
+    /* 悬停联动：高亮对应仓库列表项 */
+    box.querySelectorAll('.act-row').forEach(function(row){
+        var title = row.querySelector('.act-name').getAttribute('title');
+        var name = title ? title.split(' · ')[0] : '';
+        row.addEventListener('mouseenter', function(){
+            document.querySelectorAll('.repo-item').forEach(function(it){
+                var rn = it.querySelector('.repo-name');
+                it.classList.toggle('linked', rn && rn.textContent.trim() === name);
+            });
+        });
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', function(){
+            var target = null;
+            document.querySelectorAll('.repo-item').forEach(function(it){
+                var rn = it.querySelector('.repo-name');
+                if(rn && rn.textContent.trim() === name) target = it;
+            });
+            var href = target ? (target.querySelector('.repo-link') || target).getAttribute('href') : null;
+            if(href) window.open(href, '_blank', 'noopener');
+        });
+    });
+    box.addEventListener('mouseleave', function(){
+        document.querySelectorAll('.repo-item.linked').forEach(function(it){ it.classList.remove('linked'); });
+    });
+    /* 反向联动：悬停仓库列表 → 高亮对应活跃度行 */
+    var repoList = document.querySelector('.repo-list');
+    if(repoList){
+        repoList.querySelectorAll('.repo-item').forEach(function(it){
+            it.addEventListener('mouseenter', function(){
+                var name = it.querySelector('.repo-name').textContent.trim();
+                box.querySelectorAll('.act-row').forEach(function(row){
+                    var t = row.querySelector('.act-name').getAttribute('title');
+                    var rn = t ? t.split(' · ')[0] : '';
+                    row.classList.toggle('linked-row', rn === name);
+                });
+            });
+        });
+        repoList.addEventListener('mouseleave', function(){
+            box.querySelectorAll('.act-row.linked-row').forEach(function(r){ r.classList.remove('linked-row'); });
+        });
+    }
+    /* 动画展开 */
+    requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+            box.querySelectorAll('.act-bar').forEach(function(b){
+                b.style.width = b.dataset.w + '%';
+            });
+            /* 数字滚动动画 */
+            box.querySelectorAll('.act-count').forEach(function(el){
+                var target = parseInt(el.textContent, 10) || 0;
+                var start = null;
+                var dur = 700;
+                function step(ts){
+                    if(!start) start = ts;
+                    var p = Math.min(1, (ts - start) / dur);
+                    var eased = 1 - Math.pow(1 - p, 3);
+                    el.textContent = Math.round(target * eased);
+                    if(p < 1) requestAnimationFrame(step);
+                    else el.textContent = target;
+                }
+                requestAnimationFrame(step);
+            });
+        });
+    });
+})();
+
+/* ═══════════ 更新时间线分批展开 ═══════════ */
+(function(){
+    var entries = document.querySelectorAll('[data-role="tl-entry"]');
+    var btn = document.getElementById('tlMore');
+    if(!entries.length || !btn) return;
+    var PAGE = 40, BATCH = 60;
+    var shown = Math.min(PAGE, entries.length);
+    for(var i = PAGE; i < entries.length; i++) entries[i].style.display = 'none';
+
+    /* 事件类型 + 仓库筛选 */
+    var activeType = '';
+    var activeRepo = '';
+    var typeChips = document.querySelectorAll('.type-chip');
+    var repoBox = document.getElementById('repoFilter');
+    var repoChips = [];
+    /* 生成仓库筛选条（按出现次数降序） */
+    (function(){
+        if(!repoBox) return;
+        var counts = {};
+        entries.forEach(function(en){
+            var r = en.dataset.repo || '';
+            if(r) counts[r] = (counts[r] || 0) + 1;
+        });
+        var names = Object.keys(counts).sort(function(a, b){ return counts[b] - counts[a]; });
+        var all = document.createElement('button');
+        all.type = 'button';
+        all.className = 'filter-chip active';
+        all.dataset.repo = '';
+        all.textContent = '全部仓库 ' + entries.length;
+        repoBox.appendChild(all);
+        repoChips.push(all);
+        names.forEach(function(r){
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'filter-chip';
+            b.dataset.repo = r;
+            var sp = document.createElement('span');
+            sp.className = 'count';
+            sp.textContent = counts[r];
+            b.appendChild(document.createTextNode(r.split('/').pop() + ' '));
+            b.appendChild(sp);
+            repoBox.appendChild(b);
+            repoChips.push(b);
+        });
+        repoBox.addEventListener('click', function(e){
+            var chip = e.target.closest('.filter-chip');
+            if(!chip) return;
+            repoChips.forEach(function(c){ c.classList.toggle('active', c === chip); });
+            activeRepo = chip.dataset.repo || '';
+            applyFilter();
+        });
+    })();
+    function applyFilter(){
+        var filtering = !!(activeType || activeRepo);
+        entries.forEach(function(en, idx){
+            var tHit = !activeType || en.dataset.type === activeType;
+            var rHit = !activeRepo || en.dataset.repo === activeRepo;
+            var show = tHit && rHit;
+            if(filtering){
+                en.style.display = show ? '' : 'none';
+            } else {
+                en.style.display = idx < shown ? '' : 'none';
+            }
+        });
+        /* 隐藏无可见条目的日期分组标题 */
+        document.querySelectorAll('.upd-day').forEach(function(h){
+            var any = false;
+            var n = h.nextElementSibling;
+            while(n && !n.classList.contains('upd-day')){
+                if(n.style.display !== 'none'){ any = true; break; }
+                n = n.nextElementSibling;
+            }
+            h.style.display = any ? '' : 'none';
+        });
+        if(btn) btn.style.display = filtering ? 'none' : '';
+        var sc = document.getElementById('typeResult');
+        if(filtering){
+            var vis = 0;
+            entries.forEach(function(en){ if(en.style.display !== 'none') vis++; });
+            var label = '';
+            if(activeType && activeRepo) label = activeType + ' + ' + activeRepo.split('/').pop();
+            else if(activeType) label = activeType;
+            else if(activeRepo) label = activeRepo.split('/').pop();
+            if(sc) sc.textContent = '当前筛选：' + label + '，共 ' + vis + ' 条';
+        } else if(sc){
+            sc.textContent = '';
+        }
+        /* 侧栏仓库列表高亮同步 */
+        document.querySelectorAll('.repo-item').forEach(function(it){
+            it.classList.toggle('active', !!(activeRepo && it.dataset.repo === activeRepo));
+        });
+    }
+    typeChips.forEach(function(chip){
+        chip.addEventListener('click', function(){
+            activeType = chip.dataset.type === activeType ? '' : chip.dataset.type;
+            typeChips.forEach(function(c){ c.classList.toggle('active', c.dataset.type === activeType); });
+            applyFilter();
+        });
+    });
+    window.__tlFilter = function(repo){
+        activeRepo = repo || '';
+        repoChips.forEach(function(c){ c.classList.toggle('active', c.dataset.repo === activeRepo); });
+        applyFilter();
+    };
+
+    /* 侧栏仓库「只看」按钮 → 联动筛选 */
+    document.querySelectorAll('.repo-filter-btn').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+            e.stopPropagation();
+            var item = btn.closest('.repo-item');
+            if(!item) return;
+            if(window.__tlFilter) window.__tlFilter(item.dataset.repo || '');
+            var tl = document.querySelector('.upd-timeline');
+            if(tl) tl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+
+    /* 按日期插入分组标题 */
+    (function(){
+        var lastDay = '';
+        var timeline = document.querySelector('.upd-timeline');
+        if(!timeline) return;
+        entries.forEach(function(en){
+            /* 时间线圆点按仓库着色 */
+            var repoEl = en.querySelector('.upd-repo');
+            var dot = en.querySelector('.upd-dot');
+            if(repoEl && dot){
+                var name = repoEl.textContent.trim();
+                var hash = 0;
+                for(var i = 0; i < name.length; i++){
+                    hash = ((hash << 5) - hash) + name.charCodeAt(i);
+                    hash |= 0;
+                }
+                var hue = Math.abs(hash) % 360;
+                dot.style.borderColor = 'hsl(' + hue + ',60%,55%)';
+                dot.style.boxShadow = '0 0 0 4px hsla(' + hue + ',60%,55%,0.15)';
+                var card = en.querySelector('.upd-card');
+                if(card) card.style.borderLeft = '3px solid hsl(' + hue + ',60%,55%)';
+            }
+            var t = en.querySelector('.upd-time');
+            var day = t ? t.textContent.trim().slice(0, 10) : '';
+            if(day && day !== lastDay){
+                var h = document.createElement('div');
+                h.className = 'upd-day';
+                var parts = day.split('-').map(Number);
+                var d = new Date(parts[0], parts[1] - 1, parts[2]);
+                var now = new Date();
+                var today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                var diff = Math.round((today0 - d) / 86400000);
+                var label;
+                if(diff === 0) label = '今天 · ' + day;
+                else if(diff === 1) label = '昨天 · ' + day;
+                else if(diff < 7) label = diff + ' 天前 · ' + day;
+                else label = day;
+                h.textContent = label;
+                timeline.insertBefore(h, en);
+                lastDay = day;
+            }
+        });
+    })();
+
+    /* 消息点击展开/收起 */
+    (function(){
+        document.querySelectorAll('.upd-msg').forEach(function(m){
+            m.dataset.full = m.getAttribute('title') || '';
+            m.style.cursor = 'pointer';
+            m.addEventListener('click', function(){
+                var expanded = m.classList.toggle('expanded');
+                m.setAttribute('title', expanded ? '' : m.dataset.full);
+            });
+        });
+    })();
+
+    function updateBtn(){
+        if(shown >= entries.length){
+            btn.style.display = 'none';
+        } else {
+            btn.textContent = '展开更多动态 (' + shown + ' / ' + entries.length + ')';
+        }
+    }
+    updateBtn();
+    btn.addEventListener('click', function(){
+        var next = Math.min(shown + BATCH, entries.length);
+        for(var i = shown; i < next; i++) entries[i].style.display = '';
+        if(shown < next && entries[shown]){
+            entries[shown].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        shown = next;
+        updateBtn();
+    });
+
+    /* 侧栏仓库点击 → 展开并定位到该仓库第一条事件 */
+    (function(){
+        document.querySelectorAll('.repo-item').forEach(function(item){
+            item.addEventListener('click', function(e){
+                /* 清除事件类型筛选，确保目标仓库事件可见 */
+                if(activeType){
+                    activeType = '';
+                    typeChips.forEach(function(c){ c.classList.remove('active'); });
+                    applyTypeFilter();
+                }
+                document.querySelectorAll('.repo-item').forEach(function(x){ x.classList.remove('active'); });
+                item.classList.add('active');
+                var name = item.querySelector('.repo-name');
+                if(!name) return;
+                var target = name.textContent.trim();
+                var foundIdx = -1;
+                for(var i = 0; i < entries.length; i++){
+                    var r = entries[i].querySelector('.upd-repo');
+                    if(r && r.textContent.trim().indexOf(target) > -1){
+                        foundIdx = i;
+                        break;
+                    }
+                }
+                if(foundIdx === -1) return;
+                /* 展开到该条 */
+                var need = foundIdx + 1;
+                if(need > shown){
+                    var next = Math.min(need, entries.length);
+                    for(var j = shown; j < next; j++) entries[j].style.display = '';
+                    shown = next;
+                    updateBtn();
+                }
+                /* 高亮 + 滚动 */
+                entries[foundIdx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                var card = entries[foundIdx].querySelector('.upd-card');
+                if(card){
+                    card.classList.add('flash');
+                    setTimeout(function(){ card.classList.remove('flash'); }, 1600);
+                }
+            });
+        });
+    })();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ 内容更新 — 第98次周练补全 Python 示例代码</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-16 ・ OpenBlogger 更新第 92 轮</p>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮更新的内容</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>文章《ABC 98th 题单 · 详细题解》新增 8 段 Python 示例代码</strong>，覆盖全部 7 道题：A~F 各 1 段，G 题 2 段（查表法 + 快速幂法），与原有 Java/C++ 版本并列展示</li>
+      <li>A 五百元硬币：一行比较输出 Yes/No；B 自助取餐：数组遍历 + 相邻奖励判定；C 计票：Counter 统计 + 排序输出并列最高票</li>
+      <li>D 数字列队：滚动数组数位 DP（模 13）；E 自助餐：0/1 背包变体，先枚举"最后一道菜"再倒序更新背包；F 最小包围盒：分类维护 R/L/UD/RL 极值 + 候选时刻枚举；G 数学嘉豪：周期查表 + 快速幂取模双解法</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 正确性验证</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>8 段代码全部实际运行通过：A/B/C/G 与预期输出一致；D（?? → 8、?5? → 8、1?3 → 0）、E（样例 → 120）与暴力枚举结果逐一比对一致</li>
+      <li>F 题用 ABC130F 官方样例验证：样例 1 → 3.0000000000、样例 2 → 0.0000000000，均正确</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 全站回归（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>构建成功：64 个页面（57 篇文章），0 控制台错误 / 0 横向溢出</li>
+      <li>文章页验证：24 个代码块（Java/C++/Python 各 8）全部渲染并高亮，复制按钮正常（已复制 9 行 ✓）</li>
+      <li>既有搜索、筛选、目录、进度环、灯箱、分享等全部功能回归通过</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">4. 文件改动</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>Raw/gzhu代码训练/第98次周练.md：A~G 各题新增 #### Python 小节（共 8 个代码块）</li>
+    </ul>
+  </div>
+</body>
+</html>

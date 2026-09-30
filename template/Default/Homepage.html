@@ -457,6 +457,56 @@
             55%  { opacity:1; transform:scale(1.12); }
             100% { opacity:1; transform:scale(1); }
         }
+
+        /* ── 合成大奶蛙 引导弹窗 ── */
+        .bnw-overlay {
+            position: fixed; inset: 0; z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+            padding: 1.5rem;
+            background: rgba(20,14,8,0.5);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        html.dark .bnw-overlay { background: rgba(0,0,0,0.62); }
+        .bnw-overlay.show { opacity: 1; pointer-events: auto; }
+        .bnw-modal {
+            width: 100%; max-width: 420px;
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 22px; padding: 2.4rem 2rem;
+            text-align: center; box-shadow: var(--shadow-lg);
+            transform: translateY(24px) scale(0.96);
+            transition: transform 0.4s cubic-bezier(0.22,0.61,0.36,1);
+        }
+        .bnw-overlay.show .bnw-modal { transform: translateY(0) scale(1); }
+        .bnw-emoji { font-size: 3.4rem; line-height: 1; margin-bottom: 0.6rem; }
+        .bnw-title { font-size: 1.35rem; font-weight: 800; margin-bottom: 0.6rem; color: var(--text); }
+        .bnw-desc { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.6rem; }
+        .bnw-actions { display: flex; flex-direction: column; gap: 0.7rem; }
+        .bnw-btn {
+            display: block; width: 100%; padding: 0.8rem 1rem;
+            font-size: 0.98rem; font-weight: 700; border-radius: 100px;
+            text-decoration: none; cursor: pointer; text-align: center;
+            transition: all 0.25s; border: none; font-family: inherit;
+        }
+        .bnw-play {
+            background: var(--gradient-accent); color: #fff;
+            box-shadow: 0 6px 18px rgba(177,116,62,0.35);
+        }
+        .bnw-play:hover { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(177,116,62,0.45); }
+        .bnw-skip { background: transparent; color: var(--text-secondary); border: 1.5px solid var(--border); }
+        .bnw-skip:hover { color: var(--accent); border-color: var(--accent); background: var(--tag-bg); }
+        .bnw-never {
+            background: transparent; color: var(--text-secondary);
+            border: none; font-size: 0.8rem; font-weight: 600;
+            padding: 0.35rem; opacity: 0.7;
+        }
+        .bnw-never:hover { color: var(--accent); opacity: 1; }
+        @media (max-width: 480px) {
+            .bnw-modal { padding: 1.8rem 1.3rem; }
+            .bnw-title { font-size: 1.2rem; }
+            .bnw-desc { font-size: 0.88rem; }
+        }
     </style>
 </head>
 <body>
@@ -587,6 +637,46 @@
         </div>
         <p>Powered by <span>OpenBlogger</span> &copy; {{ current_year }}</p>
     </footer>
+
+    <!-- ── 合成大奶蛙 引导弹窗 ── -->
+    <div class="bnw-overlay" id="bnwOverlay" role="dialog" aria-modal="true" aria-labelledby="bnwTitle">
+        <div class="bnw-modal">
+            <div class="bnw-emoji">🐸</div>
+            <h2 class="bnw-title" id="bnwTitle">想玩「合成大奶蛙」吗？</h2>
+            <p class="bnw-desc">你好像来到了 YHSome 的博客主页。<br>要直接跳转去玩这个小游戏吗？</p>
+            <div class="bnw-actions">
+                <a class="bnw-btn bnw-play" href="https://yhsome.github.io/BigNaiWa">🎮 立即去玩</a>
+                <button class="bnw-btn bnw-skip" id="bnwClose" type="button">📖 继续看博客</button>
+                <button class="bnw-btn bnw-never" id="bnwNever" type="button">🚫 不再提示</button>
+            </div>
+        </div>
+    </div>
+    <script>
+    /* ═══════════ 合成大奶蛙 引导弹窗 ═══════════ */
+    (function(){
+        var KEY = 'bnw_no_prompt_v1';
+        var overlay = document.getElementById('bnwOverlay');
+        if(!overlay) return;
+        if(localStorage.getItem(KEY)) return;   // 用户选择过「不再提示」
+        function close(){ overlay.classList.remove('show'); }
+        function never(){
+            localStorage.setItem(KEY, '1');
+            close();
+        }
+        // 稍等页面入场动画结束后再弹出
+        setTimeout(function(){ overlay.classList.add('show'); }, 700);
+        var closeBtn = document.getElementById('bnwClose');
+        if(closeBtn) closeBtn.addEventListener('click', close);
+        var neverBtn = document.getElementById('bnwNever');
+        if(neverBtn) neverBtn.addEventListener('click', never);
+        // 点击遮罩空白处也可关闭（等同于「继续看博客」，下次仍会弹出）
+        overlay.addEventListener('click', function(e){ if(e.target === overlay) close(); });
+        // Esc 关闭
+        document.addEventListener('keydown', function(e){
+            if(e.key === 'Escape' && overlay.classList.contains('show')) close();
+        });
+    })();
+    </script>
 
     <script>
     /* ═══════════ 粒子背景 ═══════════ */

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v3.27 — 时间线筛选与深链接</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 48 轮</p>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>更新动态 · 事件类型筛选</strong>：类型徽标变为可点击筛选按钮，点击只看某类事件（如 PushEvent 251 条），显示筛选计数，再点取消</li>
+      <li><strong>文章页 · 锚点深链接</strong>：带 <code>#章节</code> 打开时自动展开移动端目录并平滑定位（如 #stack），分享直达章节</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>筛选 PushEvent：显示 251 条，展开更多按钮隐藏，计数提示正常</li>
+      <li>#stack 打开：移动端目录自动展开，88 个目录链接就绪</li>
+      <li>全站 0 控制台错误</li>
+    </ul>
+  </div>
+</body>
+</html>

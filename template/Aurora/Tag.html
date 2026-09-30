@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block nav_active %}tags{% endblock %}
+{% block title %}标签{% endblock %}
+{% block description %}{{ site_title }}的标签总览——按主题浏览全部 {{ tags_with_count | length if tags_with_count else 0 }} 个标签下的文章{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="container">
+        <div class="page-head" data-reveal>
+            <span class="kicker">Tags</span>
+            <h1>标签</h1>
+            <p class="page-sub">共 {{ tags_with_count | length if tags_with_count else 0 }} 个标签，点击展开对应文章</p>
+            <button class="tag-toggle-all" id="tagToggleAll">全部展开</button>
+        </div>
+
+        <!-- 标签云概览 -->
+        <div class="tag-overview glass" data-reveal>
+            {% for tc in tags_with_count %}
+            <button class="tag-chip tag-jump" data-target="tag-{{ loop.index }}"
+                    title="{{ tc.count }} 篇文章"
+                    style="font-size: {{ (0.78 + tc.count * 0.028) if (0.78 + tc.count * 0.028) <= 1.15 else 1.15 }}rem">
+                {{ tc.name }}<span class="count">{{ tc.count }}</span>
+            </button>
+            {% endfor %}
+        </div>
+
+        <!-- 标签文章列表（手风琴） -->
+        <div class="tag-sections">
+            {% for tc in tags_with_count %}
+            <section class="tag-section glass" id="tag-{{ loop.index }}" data-reveal>
+                <div class="tag-section-head-row">
+                    <button class="tag-section-head" aria-expanded="false">
+                        <span class="tag-section-name">{{ tc.name }}</span>
+                        <span class="tag-section-count">{{ tc.count }} 篇</span>
+                        <span class="tag-chevron">▾</span>
+                    </button>
+                    <a class="tag-dir-link" href="{{ relative_root }}directory.html?tag={{ tc.name | urlencode }}" title="在目录中查看">目录视图 →</a>
+                    <button class="tag-copy-link" type="button" data-link="tags.html?tag={{ tc.name | urlencode }}" title="复制标签链接">🔗</button>
+                </div>
+                <div class="tag-section-body">
+                    <div class="tag-post-list">
+                        {% for post in tc.posts %}
+                        <a class="tag-post" href="{{ post.url }}">
+                            <span class="tag-post-date">{{ post.date }}</span>
+                            <span class="tag-post-title">{{ post.title }}</span>
+                            <span class="tag-post-arrow">→</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+            {% else %}
+            <div class="empty-state glass"><span class="empty-ico">🏷️</span>暂无标签</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ═══════════ 标签云 ═══════════ */
+    .tag-overview { padding: 1.25rem 1.4rem; margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 0.55rem; align-items: center; }
+
+    /* ═══════════ 标签手风琴 ═══════════ */
+    .tag-sections { display: flex; flex-direction: column; gap: 0.9rem; }
+    .tag-section { overflow: hidden; }
+    .tag-section-head-row { display: flex; align-items: center; gap: 0.6rem; padding-right: 1.4rem; }
+    .tag-section-head {
+        width: 100%; display: flex; align-items: center; gap: 0.8rem;
+        padding: 1rem 0 1rem 1.4rem; background: none; border: none; color: var(--text);
+        font-size: 1.02rem; font-weight: 700; text-align: left;
+        transition: background 0.25s;
+    }
+    .tag-section-head-row:hover .tag-section-head { background: var(--accent-soft); }
+    .tag-section-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tag-section-count {
+        font-size: 0.74rem; font-weight: 700; color: var(--accent);
+        background: var(--accent-soft); padding: 0.2rem 0.7rem; border-radius: 999px; flex-shrink: 0;
+    }
+    .tag-dir-link {
+        font-size: 0.74rem; font-weight: 600; color: var(--text-3); flex-shrink: 0;
+        padding: 0.2rem 0.6rem; border-radius: 999px; transition: all 0.25s;
+    }
+    .tag-dir-link:hover { color: var(--accent); background: var(--accent-soft); }
+    .tag-copy-link {
+        font-size: 0.82rem; color: var(--text-3); flex-shrink: 0;
+        background: none; border: none; padding: 0.2rem 0.5rem; border-radius: 999px;
+        transition: all 0.25s; line-height: 1;
+    }
+    .tag-copy-link:hover { color: var(--accent); background: var(--accent-soft); }
+    .tag-chevron { color: var(--text-3); transition: transform 0.35s var(--ease); flex-shrink: 0; }
+    .tag-section.open .tag-chevron { transform: rotate(180deg); }
+    .tag-section-body {
+        max-height: 0; overflow: hidden;
+        transition: max-height 0.45s var(--ease);
+    }
+    .tag-section.open .tag-section-body { max-height: 1200px; }
+    .tag-post-list { padding: 0.2rem 1.4rem 1.2rem; display: flex; flex-direction: column; }
+    .tag-post {
+        display: flex; align-items: center; gap: 1rem;
+        padding: 0.72rem 0.4rem; border-bottom: 1px dashed var(--border);
+        color: var(--text); transition: all 0.25s;
+    }
+    .tag-post:last-child { border-bottom: none; }
+    .tag-post:hover { padding-left: 0.8rem; }
+    .tag-post-date { font-size: 0.78rem; color: var(--text-3); flex-shrink: 0; font-variant-numeric: tabular-nums; width: 7.2em; }
+    .tag-post-title { flex: 1; font-size: 0.94rem; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tag-post:hover .tag-post-title { color: var(--accent); }
+    .tag-post-arrow { color: var(--text-3); opacity: 0; transform: translateX(-4px); transition: all 0.25s; }
+    .tag-post:hover .tag-post-arrow { opacity: 1; transform: translateX(0); color: var(--accent); }
+
+    .tag-toggle-all {
+        margin-top: 1rem; padding: 0.45rem 1.2rem; font-size: 0.82rem; font-weight: 700;
+        color: var(--accent); background: var(--accent-soft); border: 1px solid var(--border);
+        border-radius: 999px; transition: all 0.25s;
+    }
+    .tag-toggle-all:hover { color: #fff; background: var(--grad); border-color: transparent; }
+
+    @media (max-width: 640px) {
+        .tag-post-date { width: 6em; }
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* ═══════════ 标签手风琴 ═══════════ */
+(function(){
+    var sections = document.querySelectorAll('.tag-section');
+    var firstOpen = false;
+    var allExpanded = false;
+    sections.forEach(function(sec){
+        var head = sec.querySelector('.tag-section-head');
+        var body = sec.querySelector('.tag-section-body');
+        head.addEventListener('click', function(){
+            var open = sec.classList.toggle('open');
+            head.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if(open){
+                body.style.maxHeight = body.scrollHeight + 'px';
+            } else {
+                body.style.maxHeight = '0px';
+            }
+        });
+        if(!firstOpen){
+            firstOpen = true;
+            sec.classList.add('open');
+            head.setAttribute('aria-expanded', 'true');
+            body.style.maxHeight = body.scrollHeight + 'px';
+        }
+    });
+
+    /* 全部展开 / 收起 */
+    var toggleBtn = document.getElementById('tagToggleAll');
+    if(toggleBtn){
+        toggleBtn.addEventListener('click', function(){
+            allExpanded = !allExpanded;
+            sections.forEach(function(sec){
+                var head = sec.querySelector('.tag-section-head');
+                var body = sec.querySelector('.tag-section-body');
+                if(allExpanded){
+                    sec.classList.add('open');
+                    head.setAttribute('aria-expanded', 'true');
+                    body.style.maxHeight = body.scrollHeight + 'px';
+                } else {
+                    sec.classList.remove('open');
+                    head.setAttribute('aria-expanded', 'false');
+                    body.style.maxHeight = '0px';
+                }
+            });
+            toggleBtn.textContent = allExpanded ? '全部收起' : '全部展开';
+        });
+    }
+
+    /* 窗口尺寸变化时修正展开高度 */
+    addEventListener('resize', function(){
+        sections.forEach(function(sec){
+            if(sec.classList.contains('open')){
+                sec.querySelector('.tag-section-body').style.maxHeight = sec.querySelector('.tag-section-body').scrollHeight + 'px';
+            }
+        });
+    });
+
+    /* 标签云点击 → 展开对应分区并滚动 */
+    document.querySelectorAll('.tag-jump').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var target = document.getElementById(btn.dataset.target);
+            if(!target) return;
+            if(!target.classList.contains('open')){
+                target.classList.add('open');
+                var head = target.querySelector('.tag-section-head');
+                head.setAttribute('aria-expanded', 'true');
+                target.querySelector('.tag-section-body').style.maxHeight = target.querySelector('.tag-section-body').scrollHeight + 'px';
+            }
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+
+    /* URL ?tag=xxx 深链接：自动展开并滚动到该标签 */
+    (function(){
+        var params = new URLSearchParams(location.search);
+        var tag = params.get('tag');
+        if(!tag) return;
+        var target = null;
+        sections.forEach(function(sec){
+            var name = sec.querySelector('.tag-section-name');
+            if(name && name.textContent.trim() === tag) target = sec;
+        });
+        if(!target) return;
+        /* 标签云中高亮当前标签 */
+        document.querySelectorAll('.tag-jump').forEach(function(chip){
+            if(chip.textContent.trim().indexOf(tag) === 0) chip.classList.add('active');
+        });
+        if(!target.classList.contains('open')){
+            target.classList.add('open');
+            var head = target.querySelector('.tag-section-head');
+            head.setAttribute('aria-expanded', 'true');
+            target.querySelector('.tag-section-body').style.maxHeight = target.querySelector('.tag-section-body').scrollHeight + 'px';
+        }
+        setTimeout(function(){
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+    })();
+
+    /* 复制标签链接 */
+    document.querySelectorAll('.tag-copy-link').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var url = new URL(btn.dataset.link, location.href).href;
+            function done(){
+                var old = btn.title;
+                btn.title = '已复制 ✓';
+                setTimeout(function(){ btn.title = old; }, 1500);
+            }
+            function fallback(){
+                var ta = document.createElement('textarea');
+                ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                try { document.execCommand('copy'); } catch(e) {}
+                document.body.removeChild(ta); done();
+            }
+            if(navigator.clipboard && navigator.clipboard.writeText){
+                navigator.clipboard.writeText(url).then(done).catch(fallback);
+            } else {
+                fallback();
+            }
+        });
+    });
+})();
+</script>
+{% endblock %}

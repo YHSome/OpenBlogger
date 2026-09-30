@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v3.14 — 状态可见性与排版细节</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 35 轮</p>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>目录页 · 日历日期 URL 同步</strong>：点击日期后地址栏写入 <code>?date=YYYY-MM-DD</code>，刷新/分享/直达均可恢复筛选；带 date 参数打开页面自动激活对应日期</li>
+      <li><strong>更新页 · 仓库点击高亮</strong>：侧栏仓库点击后该项高亮，明确"正在查看"的仓库</li>
+      <li><strong>文章页 · 引用图标</strong>：blockquote 左侧显示 ❝ 引号装饰，排版更有层次</li>
+      <li><strong>评论加载 · 微光动画</strong>："评论加载中…"增加 shimmer 扫光效果，等待反馈更明显</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><code>?date=2023-05-20</code> 打开后徽标显示该日期、命中 1 篇，点击日期/清除均同步 URL</li>
+      <li>仓库点击后唯一高亮（OpenBlogger）</li>
+      <li>blockquote 的 ❝ 图标渲染正常（E听说文章实测）</li>
+      <li>全站 0 控制台错误</li>
+    </ul>
+  </div>
+</body>
+</html>

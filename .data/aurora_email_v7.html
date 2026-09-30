@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v1.6 — 快捷操作与无障碍</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 7 轮</p>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>文章页 · 上下篇快捷键</strong>：按 <code>Alt + ←</code> / <code>Alt + →</code> 快速切换上一篇/下一篇</li>
+      <li><strong>主题跟随系统</strong>：未手动选择主题时，跟随系统深浅色变化实时切换（不影响已手动选择的用户）</li>
+      <li><strong>无障碍</strong>：搜索框补充 <code>aria-label</code>，导航链接补充悬停提示</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>Alt+← 从"数据结构六讲"成功跳转到上一篇"第98次周练"</li>
+      <li>导航 6 个链接全部带 title 提示；无控制台错误</li>
+    </ul>
+  </div>
+</body>
+</html>

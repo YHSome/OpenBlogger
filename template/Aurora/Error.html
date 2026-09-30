@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block nav_active %}{% endblock %}
+{% block title %}404 · 页面未找到{% endblock %}
+{% block description %}页面不存在或已被移动{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="container">
+        <section class="error-box glass" data-reveal>
+            <div class="error-code">404</div>
+            <h1 class="error-title">页面走丢了</h1>
+            <p class="error-sub">你访问的页面不存在，可能已被移动或删除。</p>
+            <form class="error-search" id="errorSearch">
+                <span class="error-search-ico">🔍</span>
+                <input type="text" id="errorSearchInput" placeholder="在全站中搜索…" autocomplete="off" aria-label="全站搜索">
+                <button type="submit">搜索</button>
+            </form>
+            <div class="error-actions">
+                <button class="error-btn" id="errorBack" type="button">← 返回上一页</button>
+                <a class="error-btn primary" href="{{ relative_root }}index.html">返回首页</a>
+                <a class="error-btn" href="{{ relative_root }}directory.html">浏览目录</a>
+                <a class="error-btn" href="{{ relative_root }}tags.html">查看标签</a>
+                <a class="error-btn" href="{{ relative_root }}sitemap.xml">站点地图</a>
+            </div>
+        </section>
+    </div>
+</div>
+
+<style>
+    .error-box {
+        text-align: center; padding: 4.5rem 2rem; margin-top: 3rem;
+        position: relative; overflow: hidden;
+    }
+    .error-box::before {
+        content: ''; position: absolute; left: 50%; top: -120px; transform: translateX(-50%);
+        width: 420px; height: 420px; border-radius: 50%;
+        background: radial-gradient(circle, var(--accent-soft-2), transparent 65%);
+        pointer-events: none;
+    }
+    .error-code {
+        font-size: clamp(4.5rem, 12vw, 7.5rem); font-weight: 900; letter-spacing: -0.05em; line-height: 1;
+        background: var(--grad); -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; position: relative;
+    }
+    .error-title { font-size: 1.6rem; font-weight: 800; margin-top: 1rem; position: relative; }
+    .error-sub { color: var(--text-2); margin-top: 0.6rem; font-size: 0.98rem; position: relative; }
+    .error-search {
+        display: flex; align-items: center; gap: 0.6rem; max-width: 420px; margin: 1.8rem auto 0; position: relative;
+    }
+    .error-search-ico { position: absolute; left: 1rem; color: var(--text-3); font-size: 0.95rem; pointer-events: none; }
+    .error-search input {
+        flex: 1; padding: 0.75rem 3.4rem 0.75rem 2.7rem; font-size: 0.95rem; color: var(--text);
+        background: var(--card-strong); border: 1px solid var(--border-strong); border-radius: 999px; outline: none;
+        transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .error-search input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+    .error-search button {
+        padding: 0.65rem 1.5rem; font-size: 0.9rem; font-weight: 700; color: #fff;
+        background: var(--grad); border: none; border-radius: 999px; transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .error-search button:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .error-actions {
+        display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; margin-top: 2rem; position: relative;
+    }
+    .error-btn {
+        padding: 0.65rem 1.6rem; border-radius: 999px; font-weight: 700; font-size: 0.92rem;
+        color: var(--text-2); background: var(--card-strong); border: 1px solid var(--border-strong);
+        transition: all 0.25s;
+    }
+    .error-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); color: var(--text); }
+    .error-btn.primary { color: #fff; background: var(--grad); border-color: transparent; }
+    .error-btn.primary:hover { box-shadow: var(--shadow-lg); }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* ═══════════ 404 全站搜索 ═══════════ */
+(function(){
+    var form = document.getElementById('errorSearch');
+    var input = document.getElementById('errorSearchInput');
+    if(!form || !input) return;
+    form.addEventListener('submit', function(e){
+        e.preventDefault();
+        var q = input.value.trim();
+        if(q){
+            location.href = 'directory.html?search=' + encodeURIComponent(q);
+        }
+    });
+    var back = document.getElementById('errorBack');
+    if(back){
+        back.addEventListener('click', function(){
+            if(history.length > 1) history.back();
+            else location.href = 'index.html';
+        });
+    }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v1.9 — 代码高亮与分享</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 10 轮</p>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>代码块语法高亮配色（重大补全）</strong>：此前全站代码块只有底色没有 token 配色。本轮为 Pygments 全部 token 类补齐深色主题配色——关键字紫、函数/内建蓝、字符串绿、数字橙、运算符青、注释灰、错误红等</li>
+      <li><strong>文章页 · 分享按钮</strong>：一键复制当前文章链接，按钮反馈"已复制链接 ✓"</li>
+      <li><strong>404 页 · 全站搜索框</strong>：输入关键词直接跳转目录页搜索结果</li>
+      <li><strong>全站 · 自定义滚动条</strong>：细圆角滚动条随主题色变化，悬停变主题色</li>
+      <li><strong>文章页 · 脚注样式</strong>：Markdown 脚注区排版（分隔线、小字号、返回链接）</li>
+      <li><strong>打印优化</strong>：打印时隐藏正文中的视频/iframe/音频</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>数据结构六讲正文：62 个代码 token，其中 30 个已应用 5 种以上不同配色，语法高亮真实生效</li>
+      <li>分享按钮点击后显示"已复制链接 ✓"，1.8 秒后还原</li>
+      <li>404 搜索"OpenBlogger"正确跳转 <code>directory.html?search=OpenBlogger</code></li>
+      <li>全站 0 断链、0 横向溢出、0 控制台错误</li>
+    </ul>
+  </div>
+</body>
+</html>

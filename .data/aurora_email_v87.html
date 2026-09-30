@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v3.66 — 资源页搜索与随机项目</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 ・ OpenBlogger 模板更新第 87 轮</p>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>资源页项目搜索框</strong>：按名称、描述、标签/主题实时过滤 GitHub 项目，带清空按钮；与原有语言筛选叠加生效（双条件 AND），并实时显示「X / 7」结果计数（aria-live 播报）</li>
+      <li><strong>资源页「随机项目」</strong>：新增 🎲 随机项目 按钮，尊重当前搜索与语言筛选（先随机可见项目，无可见时全量随机），在新标签页打开，方便发现冷门仓库</li>
+      <li><strong>移动端适配</strong>：资源工具行在小屏下自动切换为纵向堆叠，搜索框占满宽度</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 全站回归（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>0 控制台错误 / 0 页面异常；7 个主页面全部无横向溢出</li>
+      <li>专项验证：搜索「viewer」→ 仅剩 1 张卡片且计数「1 / 7」；叠加 Python 语言筛选 → 「0 / 7」；清空搜索恢复 5 张（Python 5 个）；随机项目取到合法 GitHub 链接；Star 排序行为不变</li>
+      <li>既有 82-86 轮功能全部回归通过</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 问题与解决</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>模板内 JS 字符串含真实 Unicode（✓/⭐），多次以 \u 转义匹配失败；改用真实字符锚点后一次通过，后续补丁会优先直接匹配真实字符</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">4. 文件改动</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>template/Aurora/Resources.html：搜索框/随机/计数（HTML + CSS + 筛选逻辑重写，语言筛选、搜索、Star 排序统一到 applyFilter）</li>
+      <li>README.md：资源页特性行同步更新</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">5. 下一步建议</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>友链页增加搜索/分组筛选</li>
+      <li>更新页增加「只看我关注的仓库」切换</li>
+      <li>全站字体渲染优化：中文字体栈细化与字距微调</li>
+    </ul>
+  </div>
+</body>
+</html>

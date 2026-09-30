@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v1.4 — 404 页面与目录效率</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 5 轮</p>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>全新 404 页面</strong>：渐变大字 404 + 一键返回首页/目录/标签。渲染器已内置 <code>404.html</code> 输出映射，其他主题没有该模板时自动跳过，不影响旧主题</li>
+      <li><strong>目录页 · 年份筛选</strong>：新增年份 chips（全部年份 / 2026 / 2023），可叠加标签、日期、搜索使用</li>
+      <li><strong>资源页 · Star 排序</strong>：一键按 Star 数降序排列 GitHub 项目，再点恢复默认顺序，可与语言筛选叠加</li>
+      <li><strong>全站 · 锚点滚动偏移</strong>：点击目录/锚点跳转时自动避开固定导航栏</li>
+      <li><strong>README 文档</strong>：新增 Aurora 主题完整使用说明与特性表</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>404.html 正常渲染（构建总数 55 文章 + 7 独立页 = 62），3 个跳转按钮齐全</li>
+      <li>年份筛选：2026 年命中 10 篇、2023 年 45 篇，与全量 55 篇吻合</li>
+      <li>Star 排序：4 星项目 claude-final-exam-review 从第二位升到第一位</li>
+      <li>全部既有功能回归通过，0 断链、0 横向溢出、0 控制台错误</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 下一轮候选优化</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>正文表格移动端横向滚动容器、评论相对时间显示</li>
+      <li>目录标题内嵌阅读进度百分比</li>
+      <li>首页"查看全部文章"引导链接</li>
+      <li>打印样式覆盖卡片玻璃效果</li>
+    </ul>
+  </div>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v3.63 — 相关阅读与按年归档升级</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 ・ OpenBlogger 模板更新第 84 轮</p>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>文章页「相关阅读」</strong>：新增推荐区块（渲染层 + 模板）。按共享标签数排序推荐 3 篇，同分时按发布日期倒序；卡片含日期、标签与悬停动效，链接自动处理 posts/ 目录层级（../posts/xxx.html）。全站 55 篇文章中 54 篇已生效（仅独有标签的文章无推荐，属合理空态）</li>
+      <li><strong>首页侧栏「按年归档」</strong>：新增年份归档版块（2026 年 10 篇 / 2023 年 45 篇），点击直达目录页 ?year= 筛选，与目录页年归档卡片风格统一</li>
+      <li><strong>年归档卡片无障碍增强</strong>：目录页归档卡片补上 aria-pressed 状态（初始/点击后同步切换），键盘可访问性更完整</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 全站回归（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>0 控制台错误 / 0 页面异常；首页、目录、标签、资源、友链、更新、404 全部无横向溢出</li>
+      <li>专项验证：BongoCat 文章渲染 3 张相关阅读卡片，三个链接（bandizip / bandicam / bitcoment-pro）全部 HTTP 200；首页按年归档 2 行计数正确；aria-pressed 在点击后正确翻转（全部→2026）</li>
+      <li>既有 82+83 轮功能全部回归通过（搜索、筛选、日历、目录、进度环、灯箱、代码复制、Star 排序等）</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 问题与解决</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>首页按年归档首次构建报错（Jinja2 dictsort 误用 .items()），已改为对字典直接 dictsort，构建恢复 62 篇全量渲染</li>
+      <li>自动化验证首次误判相关阅读为空：原因是字符串命中了 CSS 类名而非实际区块，已改用区块 class 断言并加入链接 200 检查，测试更准确</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">4. 文件改动</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>renderer.py：新增 _related_posts 推荐算法；文章上下文注入 related_posts；首页上下文注入 year_counts</li>
+      <li>template/Aurora/Post.html：相关阅读区块（HTML + CSS 卡片网格）</li>
+      <li>template/Aurora/Homepage.html：侧栏按年归档版块</li>
+      <li>template/Aurora/Directory.html：年归档卡片 aria-pressed 状态同步</li>
+      <li>README.md：Aurora 特性表同步更新</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">5. 下一步建议</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>相关阅读加入"同标签强度"徽标或相似度百分比</li>
+      <li>为文章页相关阅读补充「无推荐时展示最近文章」的兜底策略</li>
+      <li>目录页年份筛选条与归档卡片增加统一的高亮动效</li>
+    </ul>
+  </div>
+</body>
+</html>

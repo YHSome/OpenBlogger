@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v2.3 — 搜索与图片健壮性</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 14 轮</p>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>首页/目录 · 搜索一键清空</strong>：输入时右侧出现 ✕ 按钮，点击清空关键词并恢复完整列表，焦点保留在输入框</li>
+      <li><strong>友链页 · 头像失败兜底</strong>：头像图片加载失败时自动替换为 👤 占位，避免破图</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>清空按钮：默认隐藏 → 输入后显示 → 点击后输入框为空、按钮隐藏、3 张卡片全部恢复</li>
+      <li>头像兜底：模拟 error 事件后成功替换为 👤 占位</li>
+      <li>全站 0 控制台错误</li>
+    </ul>
+  </div>
+</body>
+</html>

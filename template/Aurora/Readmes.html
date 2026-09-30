@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block nav_active %}resources{% endblock %}
+{% block title %}项目 README{% endblock %}
+{% block description %}{{ site_title }}的 GitHub 开源项目 README 文档汇总{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="container">
+        <div class="page-head" data-reveal>
+            <span class="kicker">Docs</span>
+            <h1>项目 README</h1>
+            <p class="page-sub">从 GitHub 抓取的各开源仓库说明文档</p>
+        </div>
+
+        {% if readmes %}
+        <div class="section-title" data-reveal>共 {{ readmes | length }} 个仓库</div>
+        <div class="readme-list">
+            {% for r in readmes %}
+            <section class="readme-card glass" data-reveal>
+                <div class="readme-head">
+                    <a class="readme-name" href="{{ r.html_url }}" target="_blank" rel="noopener">{{ r.name }}</a>
+                    {% if r.language %}<span class="readme-chip">{{ r.language }}</span>{% endif %}
+                    {% if r.stars %}<span class="readme-chip">⭐ {{ r.stars }}</span>{% endif %}
+                    <a class="readme-more" href="{{ r.html_url }}" target="_blank" rel="noopener">在 GitHub 查看 ↗</a>
+                </div>
+                {% if r.description %}<p class="readme-desc">{{ r.description }}</p>{% endif %}
+                <div class="readme-body">{{ r.readme_html | safe }}</div>
+            </section>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state glass"><span class="empty-ico">📭</span>暂无 README 数据<br><span class="mono">python OpenBlogger/Plugins/GitHubActivity/fetch.py --force</span></div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .readme-list { display: flex; flex-direction: column; gap: 1.25rem; }
+    .readme-card { padding: 1.6rem 1.8rem; }
+    .readme-head { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+    .readme-name { font-size: 1.2rem; font-weight: 750; color: var(--text); transition: color 0.25s; }
+    .readme-name:hover { color: var(--accent); }
+    .readme-chip {
+        font-size: 0.74rem; font-weight: 600; color: var(--accent);
+        background: var(--accent-soft); padding: 0.16rem 0.65rem; border-radius: 999px;
+    }
+    .readme-more { margin-left: auto; font-size: 0.82rem; font-weight: 600; color: var(--accent); }
+    .readme-desc { font-size: 0.9rem; color: var(--text-2); margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+
+    /* ── README 正文排版 ── */
+    .readme-body { font-size: 0.98rem; line-height: 1.8; overflow-wrap: break-word; }
+    .readme-body > :first-child { margin-top: 0; }
+    .readme-body > :last-child { margin-bottom: 0; }
+    .readme-body h1, .readme-body h2, .readme-body h3, .readme-body h4, .readme-body h5, .readme-body h6 {
+        font-weight: 750; line-height: 1.4; margin: 1.6em 0 0.6em; scroll-margin-top: calc(var(--nav-h) + 1.2rem);
+    }
+    .readme-body h1 { font-size: 1.5rem; padding-bottom: 0.35em; border-bottom: 1px solid var(--border); }
+    .readme-body h2 { font-size: 1.3rem; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
+    .readme-body h3 { font-size: 1.14rem; }
+    .readme-body h4 { font-size: 1.02rem; }
+    .readme-body p { margin: 0.85em 0; }
+    .readme-body a { color: var(--accent); border-bottom: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); transition: border-color 0.25s; }
+    .readme-body a:hover { border-bottom-color: var(--accent); }
+    .readme-body strong { font-weight: 700; }
+    .readme-body blockquote {
+        margin: 1.2em 0; padding: 0.7em 1.2em; color: var(--text-2);
+        background: var(--accent-soft); border-left: 4px solid var(--accent);
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+    .readme-body blockquote p { margin: 0.4em 0; }
+    .readme-body ul, .readme-body ol { margin: 0.9em 0; padding-left: 1.7em; }
+    .readme-body li { margin: 0.3em 0; }
+    .readme-body li::marker { color: var(--accent); }
+    .readme-body hr { border: none; height: 1px; background: var(--border); margin: 2em 0; }
+    .readme-body img { max-width: 100%; border-radius: var(--radius-sm); box-shadow: var(--shadow-md); margin: 1.1em 0; }
+    .readme-body table { width: 100%; border-collapse: collapse; margin: 1.3em 0; font-size: 0.92rem; }
+    .readme-body th, .readme-body td { padding: 0.55rem 0.85rem; border: 1px solid var(--border); text-align: left; }
+    .readme-body th { background: var(--accent-soft); font-weight: 700; color: var(--text); }
+    .readme-body code {
+        font-family: var(--font-mono); font-size: 0.88em;
+        background: var(--accent-soft); color: var(--accent);
+        padding: 0.15em 0.45em; border-radius: 5px; word-break: break-word;
+    }
+    .readme-body pre {
+        background: #0f1524; color: #d7e0f2; padding: 1.1rem 1.3rem; margin: 1.3em 0;
+        border-radius: var(--radius-sm); overflow-x: auto; line-height: 1.65;
+        box-shadow: var(--shadow-md); font-size: 0.88rem;
+    }
+    .readme-body pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+    .readme-body .toc-link { display: none; }
+
+    @media (max-width: 640px) {
+        .readme-card { padding: 1.2rem 1.1rem; }
+        .readme-name { font-size: 1.05rem; }
+        .readme-more { margin-left: 0; }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v1.2 — 效率与无障碍升级</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 3 轮</p>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>目录页 · 分批加载</strong>：默认显示 20 篇，点击"展开更多"每次 +20，搜索/筛选/日期模式下自动全量匹配（修复了搜索只能搜到前 20 篇的问题）</li>
+      <li><strong>目录页 · 搜索关键词高亮</strong>：标题与摘要中的匹配词以 <code>&lt;mark&gt;</code> 高亮显示，清空即还原</li>
+      <li><strong>首页 · 搜索高亮</strong>：同样支持关键词高亮</li>
+      <li><strong>文章页 · 代码复制按钮</strong>：悬停代码块右上角出现"复制"，点击后显示"已复制 ✓"，含旧浏览器兜底方案</li>
+      <li><strong>文章页 · 标题锚点</strong>：h1–h4 悬停显示 <code>#</code> 链接，方便复制章节直达地址</li>
+      <li><strong>文章页 · 评论头像</strong>：根据昵称哈希生成彩色圆形字母头像</li>
+      <li><strong>全站 · 无障碍</strong>：新增"跳到主要内容"快捷键、导航当前页 <code>aria-current</code> 标注</li>
+      <li><strong>全站 · 主题切换动效</strong>：切换深浅色时按钮有旋转反馈</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>搜索"红楼"：目录页命中 4 篇并高亮 4 处 mark；首页搜索命中并高亮</li>
+      <li>代码复制：数据结构六讲正文 53 个代码块全部带复制按钮，点击后状态变为"已复制 ✓"</li>
+      <li>标题锚点：88 个目录链接 + 88 个锚点全部生成</li>
+      <li>目录页：55 篇 → 默认 20 篇 → 展开后 40 篇；月份导航 10 个月；标签筛选"讲稿和征文"命中 12 篇</li>
+      <li>阅读时长估算正常（长文显示 47 分钟）</li>
+      <li>全站 <strong>0 控制台错误、0 断链、0 横向溢出</strong></li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 过程中发现并修复的问题</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>目录页分批加载最初把"未展开"误当成"无匹配"：搜索/筛选时只在前 20 篇里找 → 已改为筛选模式下全量检索</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">4. 下一轮候选优化</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>深色模式极光背景调校与高性能降级（移动端减少模糊层）</li>
+      <li>文章热度/浏览量小卡片与"最近更新"徽标</li>
+      <li>资源页 GitHub 项目按语言筛选、更新时间排序</li>
+      <li>PWA 基础支持（manifest + 离线缓存）</li>
+    </ul>
+  </div>
+</body>
+</html>

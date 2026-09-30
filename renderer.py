@@ -35,6 +35,7 @@ PAGE_ID_FILE = PROJECT_ROOT / ".data" / ".viewer_pages.json"
 CACHE_FILE = PROJECT_ROOT / ".data" / ".render_cache.json"
 PROJECTS_FILE = PLUGINS_DIR / "GitHubProjects" / "projects.json"
 UPDATES_FILE = PROJECT_ROOT / "OpenBlogger" / "Plugins" / "GitHubActivity" / "updates.json"
+README_FILE = PROJECT_ROOT / "OpenBlogger" / "Plugins" / "GitHubActivity" / "readmes.json"
 
 # ── GitHub 语言颜色映射 ──
 LANG_COLORS = {
@@ -71,14 +72,12 @@ DEFAULT_CONFIG = {
 class BlogRenderer:
     """博客渲染器：读取 Raw 中的 .md 文件，渲染为静态 HTML 站点。"""
 
-    def __init__(self, theme: str = "default", config: Optional[dict] = None):
-        self.theme = theme
+    def __init__(self, theme: Optional[str] = None, config: Optional[dict] = None):
+        # 主题优先级：显式参数 > site.json 的 theme 配置 > 默认 default
         self.config = {**DEFAULT_CONFIG, **(config or {})}
-        self.template_dir = TEMPLATE_ROOT / theme.capitalize() if theme != "default" else TEMPLATE_ROOT / "Default"
-        self.template_dir = self.template_dir.resolve()
-
-        if not self.template_dir.exists():
-            raise FileNotFoundError(f"模板目录不存在: {self.template_dir}")
+        theme = theme or self.config.get("theme") or "default"
+        self.theme = theme
+        self.template_dir = BlogRenderer._resolve_template_dir(theme)
 
         self.env = Environment(
             loader=FileSystemLoader(str(self.template_dir)),
@@ -90,6 +89,17 @@ class BlogRenderer:
         self.posts: list[dict] = []
         self.cache: dict = self._load_cache()
         self._page_ids: dict[str, int] = self._load_page_ids()    # Viewer 页面编号记录
+
+    @staticmethod
+    def _resolve_template_dir(theme: str) -> Path:
+        """按主题名定位模板目录，目录名匹配大小写不敏感（如 scifi → SciFi）。"""
+        exact = TEMPLATE_ROOT / theme
+        if exact.is_dir():
+            return exact.resolve()
+        for child in TEMPLATE_ROOT.iterdir():
+            if child.is_dir() and child.name.lower() == theme.lower():
+                return child.resolve()
+        raise FileNotFoundError(f"模板目录不存在: {TEMPLATE_ROOT / theme}")
 
     # ═══════════════════════════════════════════════
     #  缓存管理
@@ -238,6 +248,97 @@ class BlogRenderer:
         }
 
     @staticmethod
+    def _ensure_front_matter(file_path: Path) -> bool:
+        """
+        确保 raw 源文件带有 time/title 元数据；缺失则自动写回源文件。
+
+        返回 True 表示本次写回了文件。
+        """
+        try:
+            raw_text = file_path.read_text(encoding="utf-8")
+        except OSError:
+            return False
+        lines = raw_text.splitlines()
+
+        metadata = {}
+        body_start = 0
+        for i, line in enumerate(lines):
+            line = line.strip()
+            if not line:
+                body_start = i + 1
+                break
+            match = re.match(r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*[:：]\s*(.*)", line)
+            if match:
+                metadata[match.group(1).strip().lower()] = match.group(2).strip()
+            else:
+                body_start = i
+                break
+
+        # 找出缺失的字段
+        missing = {}
+        if not metadata.get("title"):
+            body_lines = lines[body_start:]
+            while body_lines and not body_lines[0].strip():
+                body_lines.pop(0)
+            missing["title"] = BlogRenderer._extract_title_from_body("\n".join(body_lines))
+        if not metadata.get("time"):
+            missing["time"] = datetime.now().strftime(
+                "%Y.%-m.%-d" if os.name != "nt" else "%Y.%#m.%#d"
+            )
+        if not missing:
+            return False
+
+        # 重建文件头：无元数据头 → 补标准头；有 → 按规范顺序插入缺失行
+        newline = "\r\n" if "\r\n" in raw_text else "\n"
+        header_lines = lines[:body_start]
+        while header_lines and not header_lines[-1].strip():
+            header_lines.pop()
+        body_lines = lines[body_start:]
+        while body_lines and not body_lines[0].strip():
+            body_lines.pop(0)
+
+        canonical = ("time", "tag", "title")
+
+        def canonical_index(key: str) -> int:
+            return canonical.index(key) if key in canonical else len(canonical)
+
+        has_header = any(
+            re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*\s*[:：]\s*", h) for h in header_lines
+        )
+
+        if not has_header:
+            new_header = []
+            for key in canonical:
+                value = missing.get(key) or metadata.get(key, "")
+                new_header.append(f"{key}: {value}" if value else f"{key}:")
+            new_lines = new_header + [""] + body_lines
+        else:
+            new_header = []
+            inserted = set()
+            for h in header_lines:
+                m = re.match(r"^([a-zA-Z_][a-zA-Z0-9_]*)\s*[:：]\s*", h)
+                if m:
+                    key = m.group(1).strip().lower()
+                    for k in canonical:
+                        if (
+                            k in missing
+                            and k not in inserted
+                            and canonical_index(k) < canonical_index(key)
+                        ):
+                            new_header.append(f"{k}: {missing[k]}")
+                            inserted.add(k)
+                new_header.append(h)
+            for k in canonical:
+                if k in missing and k not in inserted:
+                    new_header.append(f"{k}: {missing[k]}")
+            new_lines = new_header + [""] + body_lines
+
+        text = newline.join(new_lines).rstrip("\r\n") + newline
+        file_path.write_text(text, encoding="utf-8")
+        print(f"✏️  补全元数据: {file_path.name} → 新增 {', '.join(missing)}")
+        return True
+
+    @staticmethod
     def _extract_title_from_body(body_md: str, max_len: int = 20) -> str:
         """从正文中提取标题：取第一句（以 。！？.!? 换行 为界），超出截断+省略号。"""
         # 去除开头的 # 标记
@@ -376,6 +477,9 @@ class BlogRenderer:
         """
         stats = {"rendered": 0, "skipped": 0, "errors": []}
 
+        # Step 0: 每次渲染强制抓取一次 GitHub 最近动态（网络失败时沿用上次数据）
+        self._refresh_updates()
+
         # Step 1: 扫描 Raw/ 目录中的 .md 文件
         raw_files = sorted(RAW_DIR.rglob("*.md"))  # 递归扫描子目录
         if not raw_files:
@@ -386,6 +490,8 @@ class BlogRenderer:
         self.posts = []
         for md_path in raw_files:
             try:
+                # 缺失 title/time 元数据时自动写回源文件（即使命中缓存也会检查）
+                BlogRenderer._ensure_front_matter(md_path)
                 if not force and not self._is_changed(md_path):
                     stats["skipped"] += 1
                     # 仍需从缓存恢复文章数据用于列表页渲染
@@ -445,6 +551,12 @@ class BlogRenderer:
             ("resources.html", "Resources.html", self._build_resources_context()),
             ("friendlinks.html", "FriendLinks.html", self._build_friendlinks_context()),
             ("updates-page.html", "Updates.html", self._build_updates_context()),
+            ("readmes.html", "Readmes.html", self._build_readmes_context()),
+            ("404.html", "Error.html", {
+                "site_title": self.config["site_title"],
+                "current_year": datetime.now().year,
+                "relative_root": "",
+            }),
         ]
 
         for filename, template, context in list_pages:
@@ -489,9 +601,12 @@ class BlogRenderer:
                              next_post: Optional[dict], out_path: Path) -> dict:
         """构建文章页的模板上下文（位于 posts/ 子目录）。"""
         meta = post["metadata"]
+        m = re.match(r'(\d{4})\D+(\d{1,2})\D+(\d{1,2})', meta["time"])
+        raw_date = f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}" if m else ""
         return {
             "title": meta["title"],
             "date": self._format_date(meta["time"]),
+            "raw_date": raw_date,
             "tags": meta.get("tags", []),
             "author": meta.get("author", self.config.get("author", "")),
             "content": post["body_html"],
@@ -505,6 +620,7 @@ class BlogRenderer:
             "total_words": self._count_total_words(),  # 全站总字数
             "all_tags": self._collect_tags(),      # 侧栏标签（全量，目录页用）
             "sidebar_tags": self._random_sidebar_tags(),  # 精选标签（侧栏展示）
+            "related_posts": self._related_posts(post, count=3),  # 相关阅读
             "max_page_id": max(self._page_ids.values()) if self._page_ids else 0,
             **self._viewer_context(out_path),      # Viewer: page_id + 配置
         }
@@ -512,18 +628,24 @@ class BlogRenderer:
     def _build_homepage_context(self) -> dict:
         """构建首页模板上下文。"""
         all_posts = [self._summary(p) for p in self.posts]
-        recent = all_posts[:3]  # 首页展示最近 3 篇
+        recent = all_posts[:6]  # 首页展示最近 6 篇
         # 项目标签的文章
         projects = [s for p in self.posts
                     if "项目" in p["metadata"].get("tags", [])
                     for s in [self._summary(p)]]
         all_tags = self._collect_tags()
+        year_counts: dict[str, int] = {}
+        for p in self.posts:
+            m = re.match(r'(\d{4})', p["metadata"]["time"])
+            if m:
+                year_counts[m.group(1)] = year_counts.get(m.group(1), 0) + 1
         return {
             "site_title": self.config["site_title"],
             "site_description": self.config["site_description"],
             "recent_posts": recent,
             "project_posts": projects,             # 项目展示区
             "all_tags": all_tags,
+            "year_counts": year_counts,            # 按年归档（侧栏）
             "sidebar_tags": self._random_sidebar_tags(),  # 精选标签（侧栏展示）
             "total_posts": len(self.posts),       # 全站文章总数（侧栏统计用）
             "total_words": self._count_total_words(),  # 全站总字数
@@ -678,6 +800,26 @@ class BlogRenderer:
             "relative_root": "",
         }
 
+    def _build_readmes_context(self) -> dict:
+        """构建 README 展示页上下文（将每个仓库的 README 渲染为 HTML）。"""
+        readmes = []
+        for r in self._load_readmes():
+            readmes.append({
+                "name": r.get("name", ""),
+                "full_name": r.get("full_name", ""),
+                "html_url": r.get("html_url", ""),
+                "description": r.get("description", ""),
+                "language": r.get("language", ""),
+                "stars": r.get("stars", 0),
+                "readme_html": self.md_to_html(r.get("readme_md", "")),
+            })
+        return {
+            "site_title": self.config["site_title"],
+            "readmes": readmes,
+            "current_year": datetime.now().year,
+            "relative_root": "",
+        }
+
     def _load_projects(self) -> list[dict]:
         """从 projects.json 加载 GitHub 仓库数据，格式化为模板用的结构。"""
         if not PROJECTS_FILE.exists():
@@ -713,11 +855,23 @@ class BlogRenderer:
                 "lang_color": LANG_COLORS.get(lang, "#8b8b8b"),
                 "stars": r.get("stars", 0),
                 "forks": r.get("forks", 0),
+                "updated_at": str(r.get("updated_at", ""))[:10],
+                "topics": r.get("topics", [])[:4],
                 "has_pages": has_pages,
                 "link": link,
                 "icon": icon,
             })
         return result
+
+    def _refresh_updates(self) -> None:
+        """每次构建强制抓取一次 GitHub 动态（force=True 绕过 10 分钟缓存）。"""
+        try:
+            from OpenBlogger.Plugins.GitHubActivity.fetch import fetch as _gh_fetch
+            user = self.config.get("github_user", "YHSome")
+            print(f"🔃 正在抓取 GitHub 最近动态（{user}）…")
+            _gh_fetch(user=user, force=True)
+        except Exception as e:
+            print(f"⚠️  GitHub 动态抓取失败，沿用上次数据: {e}")
 
     def _load_updates(self) -> dict:
         """从 GitHubActivity 插件目录加载全部更新记录。"""
@@ -734,6 +888,16 @@ class BlogRenderer:
             "timeline": data.get("timeline", []),
             "by_repo": data.get("by_repo", {}),
         }
+
+    def _load_readmes(self) -> list[dict]:
+        """从 GitHubActivity 插件目录加载抓取到的 README 列表。"""
+        if not README_FILE.exists():
+            return []
+        try:
+            data = json.loads(README_FILE.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return []
+        return data.get("readmes", [])
 
     def _count_total_words(self) -> int:
         """统计全站文章总字数（去除 Markdown 标记后的纯文本字数）。"""
@@ -766,6 +930,9 @@ class BlogRenderer:
         meta = post["metadata"]
         m = re.match(r'(\d{4})\D+(\d{1,2})\D+(\d{1,2})', meta["time"])
         raw_date = f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}" if m else ""
+        # 统计单篇字数（与全站统计同口径：剥离 Markdown 符号后的有效字符数）
+        clean = re.sub(r'[#*>`~\[\]()!_|`\-]', ' ', post.get("body_md", ""))
+        clean = re.sub(r'\s+', '', clean)
         return {
             "title": meta["title"],
             "date": self._format_date(meta["time"]),
@@ -773,6 +940,7 @@ class BlogRenderer:
             "url": post.get("url", f"posts/{post['slug']}.html"),
             "tags": meta.get("tags", []),
             "excerpt": meta.get("excerpt", ""),
+            "word_count": len(clean),            # 单篇字数（首页卡片等展示用）
         }
 
     def _nav_post(self, post: dict) -> dict:
@@ -782,6 +950,29 @@ class BlogRenderer:
             "title": meta["title"],
             "url": f"{post['slug']}.html",       # 文章都在 posts/ 下，相对链接无需前缀
         }
+
+    def _related_posts(self, post: dict, count: int = 3) -> list:
+        """按共享标签数推荐相关文章（同分时按发布日期倒序）。"""
+        tags = set(post["metadata"].get("tags", []))
+
+        def raw(p: dict) -> str:
+            m = re.match(r'(\d{4})\D+(\d{1,2})\D+(\d{1,2})', p["metadata"]["time"])
+            return f"{m.group(1)}-{int(m.group(2)):02d}-{int(m.group(3)):02d}" if m else ""
+
+        scored = []
+        for p in self.posts:
+            if p is post:
+                continue
+            shared = len(tags & set(p["metadata"].get("tags", [])))
+            if shared:
+                scored.append((shared, p))
+        if not scored:
+            # 无共享标签时兜底为最近的几篇文章，保证推荐区不空缺
+            recent = [p for p in self.posts if p is not post]
+            recent.sort(key=raw, reverse=True)
+            return [self._summary(p) for p in recent[:count]]
+        scored.sort(key=lambda x: (x[0], raw(x[1])), reverse=True)
+        return [self._summary(p) for _, p in scored[:count]]
 
     def _format_date(self, date_str: str) -> str:
         """使用配置的日期格式。"""
@@ -852,6 +1043,7 @@ class BlogRenderer:
             f"  <url><loc>{site_url}/index.html</loc><lastmod>{today}</lastmod><priority>1.0</priority></url>",
             f"  <url><loc>{site_url}/directory.html</loc><lastmod>{today}</lastmod><priority>0.8</priority></url>",
             f"  <url><loc>{site_url}/tags.html</loc><lastmod>{today}</lastmod><priority>0.6</priority></url>",
+            f"  <url><loc>{site_url}/readmes.html</loc><lastmod>{today}</lastmod><priority>0.5</priority></url>",
         ]
         for post in self.posts:
             urls.append(

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v3.65 — 打字机标语与分享浮层</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 ・ OpenBlogger 模板更新第 86 轮</p>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>首页 Hero 打字机标语轮播</strong>：站点描述下方新增打字机效果标语，循环展示「记录思考，分享成长 / 把知识变成作品 / 以文字对抗遗忘 / 欢迎来到我的数字花园」，带闪烁光标；系统开启"减少动效"时直接显示首条标语</li>
+      <li><strong>目录页「随机一篇」彩蛋</strong>：热门搜索建议区新增 🎲 随机一篇 按钮，尊重当前筛选（先随机可见结果，无可见结果时全量随机），一键开启一段未知旅程</li>
+      <li><strong>文章页分享浮层</strong>：无原生分享能力时点击分享按钮弹出浮层，含「复制链接」+ X / QQ / 微博 / Telegram 四个平台直达链接（自动注入当前页 URL 与标题）；点击外部/Esc 关闭，复制后按钮反馈「已复制链接 ✓」，带完整 aria-expanded / role=menu 无障碍语义</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 全站回归（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>0 控制台错误 / 0 页面异常；7 个主页面全部无横向溢出</li>
+      <li>专项验证：打字机从「记录」逐字输入到「记录思考，分享成长」且光标存在；随机一篇落在 posts/ 下合法文章（Claude期末复习Skill）；分享浮层打开后 4 个平台链接均注入正确编码 URL，复制链接后浮层关闭并显示反馈，Esc 可关闭</li>
+      <li>既有 82-85 轮功能全部回归通过</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 问题与解决</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>补丁锚点多次因 emoji 码点差异（✨ vs ✦）失败，改用 ASCII 锚点后稳定；分享浮层方案考虑过纯文字按钮，最终采用 Web Share 优先 + 浮层兜底的双层策略，兼顾移动端原生体验与桌面端多平台分享</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">4. 文件改动</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>template/Aurora/Homepage.html：打字机标语 HTML/CSS/JS（含 reduced-motion 降级）</li>
+      <li>template/Aurora/Directory.html：随机一篇按钮 + 逻辑</li>
+      <li>template/Aurora/Post.html：分享浮层（4 平台 + 复制 + 关闭交互）</li>
+      <li>README.md：Aurora 特性表同步更新</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">5. 下一步建议</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>资源页增加「随机项目」与搜索框</li>
+      <li>文章页正文大图增加「点击查看原图」放大模式（现有灯箱外补充）</li>
+      <li>全站键盘导航增强：Tab 焦点可见性微调与 / 快捷键聚焦当前页搜索</li>
+    </ul>
+  </div>
+</body>
+</html>

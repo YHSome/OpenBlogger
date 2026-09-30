@@ -1,0 +1,891 @@
+{% extends "base.html" %}
+{% block nav_active %}directory{% endblock %}
+{% block title %}文章目录{% endblock %}
+{% block description %}{{ site_title }}的文章目录——共 {{ all_posts | length if all_posts else 0 }} 篇文章，支持搜索、标签、年份与日期筛选{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="container">
+        <div class="page-head" data-reveal>
+            <span class="kicker">Archive</span>
+            <h1>文章目录</h1>
+            <p class="page-sub">共 {{ all_posts | length if all_posts else 0 }} 篇文章 · 支持搜索、标签与日期筛选</p>
+        </div>
+
+        <div class="search-wrap" data-reveal>
+            <span class="search-ico">🔍</span>
+            <input type="text" id="searchInput" placeholder="搜索标题、内容或标签…" autocomplete="off" aria-label="搜索文章">
+            <button class="search-clear" id="searchClear" type="button" aria-label="清空搜索">✕</button>
+        </div>
+        <div class="search-count" id="searchCount" aria-live="polite"></div>
+        <div class="kb-hint" id="kbHint">↑↓ 选择结果 · Enter 打开 · Esc 清除 · ? 快捷键帮助</div>
+        <div class="search-suggest" id="searchSuggest">
+            <span class="ss-label">热门：</span>
+            {% for tag in (all_tags or [])[:5] %}
+            <button class="filter-chip ss-chip" type="button" data-q="{{ tag.name }}">{{ tag.name }}</button>
+            {% endfor %}
+            <button class="filter-chip rnd-chip" id="dirRandom" type="button" title="随机打开一篇文章">🎲 随机一篇</button>
+        </div>
+        <div class="search-history" id="searchHistory" hidden>
+            <span class="ss-label">最近搜索：</span>
+            <span id="historyChips"></span>
+            <button class="history-clear" id="historyClear" type="button">清空</button>
+        </div>
+
+        <div class="chip-bar" id="filterBar" data-reveal>
+            <button class="filter-chip active" data-tag="">全部 <span class="count">{{ all_posts | length if all_posts else 0 }}</span></button>
+            {% for tag in all_tags %}
+            <button class="filter-chip" data-tag="{{ tag.name }}">{{ tag.name }} <span class="count">{{ tag.count }}</span></button>
+            {% endfor %}
+        </div>
+        <div class="chip-bar" id="yearBar" data-reveal></div>
+        <div class="year-cards" id="yearCards" data-reveal></div>
+
+        <div class="date-badge" id="dateBadge"></div>
+
+        <div class="layout-2col reverse">
+            <aside class="sidebar">
+                <div class="widget glass" data-reveal>
+                    <div class="widget-title">站点统计</div>
+                    <div class="stat-rows">
+                        <div class="stat-row"><span>文章总数</span><strong>{{ all_posts | length if all_posts else 0 }}</strong></div>
+                        <div class="stat-row"><span>标签数量</span><strong>{{ all_tags | length if all_tags else 0 }}</strong></div>
+                        <div class="stat-row"><span>本月发文</span><strong id="monthPostCount">…</strong></div>
+                        <div class="stat-row" title="来自 Viewer 全站计数器"><span>浏览总量</span><strong id="dirGlobal">…</strong></div>
+                    </div>
+                </div>
+                <div class="widget glass" data-reveal>
+                    <div class="widget-title">日历</div>
+                    <div id="calendarCard"></div>
+                    <div style="text-align:center;margin-top:0.7rem">
+                        <button class="cal-today" id="calToday" type="button">回到今天</button>
+                    </div>
+                </div>
+                <div class="widget glass" data-reveal>
+                    <div class="widget-title">标签导航</div>
+                    <div class="tag-cloud">
+                        {% for tag in all_tags %}
+                        <button class="tag-chip js-tag-chip" data-tag="{{ tag.name }}">{{ tag.name }}<span class="count">{{ tag.count }}</span></button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="widget glass" data-reveal>
+                    <div class="widget-title">月份导航</div>
+                    <div class="month-jump" id="monthJump"></div>
+                </div>
+            </aside>
+
+            <main>
+                <div class="post-list" id="postList">
+                    {% if all_posts %}
+                        {% for post in all_posts %}
+                        {% if post.show_month %}
+                        <div class="month-divider" data-reveal>
+                            <span class="month-label">{{ post.month_label }}</span>
+                            <span class="month-line"></span>
+                        </div>
+                        {% endif %}
+                        <a class="post-card glass card-hover" data-reveal href="{{ post.url }}"
+                           style="transition-delay: {{ [0, loop.index0 % 5 * 60] | max }}ms"
+                           data-date="{{ post.raw_date }}" data-tags="{{ post.tags | join(',') }}"
+                           data-search-text="{{ post.title }} {{ post.excerpt }} {{ post.tags | join(' ') }}">
+                            <div class="post-meta">
+                                <span class="post-date">📅 {{ post.date }}</span>
+                                {% if post.tags %}<span class="dot"></span>
+                                <span class="post-tags">
+                                    {% for tag in post.tags %}<span class="tag">{{ tag }}</span>{% endfor %}
+                                </span>{% endif %}
+                            </div>
+                            <h3>{{ post.title }}</h3>
+                            {% if post.excerpt %}<p class="post-excerpt">{{ post.excerpt }}</p>{% endif %}
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state glass"><span class="empty-ico">🗂️</span>暂无文章</div>
+                    {% endif %}
+                </div>
+                <div style="text-align:center;margin-top:1.4rem">
+                    <button class="load-more" id="dirMore">展开更多文章</button>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ═══════════ 月份分隔 ═══════════ */
+    .month-divider { display: flex; align-items: center; gap: 1rem; padding: 0.4rem 0.2rem 0; }
+    .month-label {
+        font-size: 0.85rem; font-weight: 800; color: var(--accent);
+        background: var(--accent-soft); padding: 0.25rem 0.85rem; border-radius: 999px; flex-shrink: 0;
+    }
+    .month-line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--border-strong), transparent); }
+
+    /* ═══════════ 日期筛选标签 ═══════════ */
+    .date-badge { display: none; }
+    .date-badge.visible {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        background: var(--accent-soft); color: var(--accent);
+        font-size: 0.85rem; font-weight: 600; padding: 0.4rem 1rem; border-radius: 999px;
+        margin: -0.5rem 0 1.25rem;
+    }
+    .date-badge .clear-date {
+        background: none; border: none; color: var(--accent); font-size: 1rem; cursor: pointer;
+        display: inline-flex; align-items: center; line-height: 1;
+    }
+
+    /* ═══════════ 日历 ═══════════ */
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.7rem; font-size: 0.88rem; font-weight: 700; }
+    .cal-header button {
+        background: var(--accent-soft); border: none; color: var(--accent);
+        width: 26px; height: 26px; border-radius: 7px; font-size: 0.8rem; transition: all 0.2s;
+    }
+    .cal-header button:hover { background: var(--accent); color: #fff; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+    .cal-day-hdr { text-align: center; font-size: 0.68rem; color: var(--text-3); font-weight: 700; padding: 0.25rem 0; }
+    .cal-day {
+        text-align: center; font-size: 0.76rem; padding: 0.32rem 0; border-radius: 6px;
+        color: var(--text-2); cursor: default; transition: all 0.2s;
+    }
+    .cal-day.other-month { color: var(--text-3); opacity: 0.4; }
+    .cal-day.has-post { cursor: pointer; color: var(--text); font-weight: 700; }
+    .cal-day.has-post:hover { background: var(--accent-soft); }
+    .cal-day.today { box-shadow: inset 0 0 0 1.5px var(--accent); }
+    .cal-day.active-date { background: var(--grad); color: #fff; }
+    .cal-day.tag-match { box-shadow: inset 0 0 0 2px var(--accent); font-weight: 800; }
+    .cal-today {
+        padding: 0.35rem 1rem; font-size: 0.78rem; font-weight: 600; color: var(--text-2);
+        background: var(--accent-soft); border: 1px solid var(--border); border-radius: 999px;
+        transition: all 0.25s;
+    }
+    .cal-today:hover { color: var(--accent); border-color: var(--accent); }
+
+    /* 搜索标题命中标记 */
+    .post-card.title-hit h3::after {
+        content: '标题命中';
+        display: inline-block; font-size: 0.6rem; font-weight: 700; color: var(--accent);
+        background: var(--accent-soft); border: 1px solid var(--border);
+        padding: 0.08rem 0.45rem; border-radius: 999px; margin-left: 0.5rem; vertical-align: middle;
+    }
+
+    /* ═══════════ 筛选后月份折叠 ═══════════ */
+    .month-divider.hidden { display: none; }
+    .post-list > .post-card.hidden { display: none; }
+    .post-list:empty::after { content: ''; }
+    .no-result {
+        text-align: center; color: var(--text-3); padding: 2.5rem 1rem; font-size: 0.95rem;
+        display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    }
+    .no-result-clear {
+        padding: 0.55rem 1.4rem; font-size: 0.85rem; font-weight: 700; color: var(--accent);
+        background: var(--accent-soft); border: 1px solid var(--border); border-radius: 999px;
+        transition: all 0.25s;
+    }
+    .no-result-clear:hover { color: #fff; background: var(--grad); border-color: transparent; }
+    .no-result:empty { display: none; }
+    }
+    .load-more {
+        padding: 0.65rem 1.8rem; font-size: 0.9rem; font-weight: 700; color: var(--accent);
+        background: var(--accent-soft); border: 1px solid var(--border); border-radius: 999px;
+        transition: all 0.25s;
+    }
+    .load-more:hover { color: #fff; background: var(--grad); border-color: transparent; transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+    /* ═══════════ 月份导航 ═══════════ */
+    .month-jump { display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; }
+    .month-jump a {
+        display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+        padding: 0.5rem 0.6rem; border-radius: var(--radius-xs);
+        font-size: 0.85rem; color: var(--text-2); transition: all 0.25s;
+    }
+    .month-jump a:hover { color: var(--accent); background: var(--accent-soft); padding-left: 0.9rem; }
+    .month-jump a.mj-dim { opacity: 0.35; pointer-events: none; }
+    .month-jump a .mj-count {
+        font-size: 0.7rem; font-weight: 700; color: var(--text-3);
+        background: var(--card-strong); border: 1px solid var(--border);
+        padding: 0.05rem 0.5rem; border-radius: 999px;
+    }
+
+    /* ═══════════ 最近搜索 ═══════════ */
+    .search-history { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: -0.6rem 0 1.25rem; }
+    .search-history[hidden] { display: none; }
+    .history-clear {
+        background: none; border: none; color: var(--text-3); font-size: 0.72rem;
+        text-decoration: underline; padding: 0.2rem 0.4rem; cursor: pointer; transition: color 0.2s;
+    }
+    .history-clear:hover { color: var(--danger); }
+
+    /* ═══════════ 按年归档卡片 ═══════════ */
+    .year-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 0.7rem; margin: -0.4rem 0 1.5rem; }
+    .year-card {
+        display: flex; flex-direction: column; gap: 0.55rem;
+        padding: 0.85rem 1rem; background: var(--card); border: 1px solid var(--border);
+        border-radius: var(--radius-sm); cursor: pointer; text-align: left;
+        color: var(--text); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        transition: all 0.25s;
+    }
+    .year-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .year-card.active { border-color: var(--accent); background: var(--accent-soft); }
+    .year-card .yc-top { display: flex; align-items: baseline; justify-content: space-between; gap: 0.4rem; }
+    .year-card .yc-year { font-size: 1.02rem; font-weight: 800; letter-spacing: -0.02em; }
+    .year-card.active .yc-year { color: var(--accent); }
+    .year-card .yc-count { font-size: 0.72rem; font-weight: 700; color: var(--text-3); font-variant-numeric: tabular-nums; }
+    .year-card.active .yc-count { color: var(--accent); }
+    .year-card .yc-bar { height: 4px; border-radius: 999px; background: var(--border); overflow: hidden; }
+    .year-card .yc-bar i {
+        display: block; height: 100%; border-radius: 999px;
+        background: var(--grad); width: 0; transition: width 0.6s var(--ease);
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+/* ═══════════ 目录页：搜索 + 标签 + 日期筛选 ═══════════ */
+(function(){
+    var si = document.getElementById('searchInput');
+    var sc = document.getElementById('searchCount');
+    var clearBtn = document.getElementById('searchClear');
+    var pl = document.getElementById('postList');
+    var fb = document.getElementById('filterBar');
+    var cards = pl.querySelectorAll('.post-card');
+    var dividers = pl.querySelectorAll('.month-divider');
+    var dateBadge = document.getElementById('dateBadge');
+    var calendarCard = document.getElementById('calendarCard');
+    var postDates = {{ post_dates | tojson }};
+
+    /* 搜索关键词高亮 */
+    function escHtml(s){
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function highlight(text, q){
+        if(!q || /[&<>"']/.test(q)) return escHtml(text);
+        var re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+        return escHtml(text).replace(re, '<mark>$1</mark>');
+    }
+    cards.forEach(function(c){
+        var h = c.querySelector('h3');
+        var ex = c.querySelector('.post-excerpt');
+        c.dataset.origTitle = h ? h.textContent : '';
+        c.dataset.origExcerpt = ex ? ex.textContent : '';
+    });
+
+    var activeTag = '';
+    var activeDate = '';
+    var activeYear = '';
+    var showLimit = 20;
+    var searchTimer = null;
+
+    /* ── 从 URL 读取初始参数 ── */
+    var params = new URLSearchParams(location.search);
+    var urlTag = params.get('tag');
+    var urlSearch = params.get('search');
+    if(urlTag){
+        activeTag = urlTag;
+        fb.querySelectorAll('.filter-chip').forEach(function(c){
+            c.classList.toggle('active', c.dataset.tag === urlTag);
+        });
+    }
+    if(urlSearch){
+        si.value = decodeURIComponent(urlSearch);
+    }
+
+    function filter(){
+        var q = si.value.toLowerCase().trim();
+        var visibleCount = 0;
+        cards.forEach(function(c, idx){
+            var st = (c.dataset.searchText || '').toLowerCase();
+            var titleHit = !!(q && (c.dataset.origTitle || '').toLowerCase().indexOf(q) > -1);
+            var mq = !q || st.indexOf(q) > -1;
+            var mt = !activeTag || (c.dataset.tags || '').split(',').indexOf(activeTag) > -1;
+            var md = !activeDate || c.dataset.date === activeDate;
+            var my = !activeYear || c.dataset.date.slice(0, 4) === activeYear;
+            var show = mq && mt && md && my && (q || activeTag || activeDate || activeYear || idx < showLimit);
+            c.classList.toggle('hidden', !show);
+            c.classList.toggle('title-hit', titleHit);
+            /* 搜索时标题命中优先排序 */
+            if(q && show){
+                c.style.order = titleHit ? '0' : '1';
+            } else {
+                c.style.order = '';
+            }
+            if(show) visibleCount++;
+            var h = c.querySelector('h3');
+            var ex = c.querySelector('.post-excerpt');
+            if(h) h.innerHTML = highlight(c.dataset.origTitle, q);
+            if(ex) ex.innerHTML = highlight(c.dataset.origExcerpt, q);
+        });
+        /* 月份分隔线：仅当前面有可见文章时显示 */
+        var children = pl.children;
+        var hasVisible = false;
+        for(var i = children.length - 1; i >= 0; i--){
+            var el = children[i];
+            if(!el.classList) continue;
+            if(el.classList.contains('month-divider')){
+                el.classList.toggle('hidden', !!q || !hasVisible);
+                hasVisible = false;
+            } else if(el.classList.contains('post-card') && !el.classList.contains('hidden')){
+                hasVisible = true;
+            }
+        }
+        /* 无结果提示 */
+        var empty = pl.querySelector('.no-result');
+        if(visibleCount === 0){
+            if(!empty){
+                empty = document.createElement('div');
+                empty.className = 'no-result glass';
+                empty.innerHTML = '<span>没有符合条件的文章，换个关键词试试 🔍</span>' +
+                    '<button class="no-result-clear" type="button">清除全部筛选</button>';
+                pl.appendChild(empty);
+                empty.querySelector('.no-result-clear').addEventListener('click', function(){
+                    si.value = '';
+                    si.dispatchEvent(new Event('input'));
+                    activeTag = '';
+                    activeDate = '';
+                    activeYear = '';
+                    showLimit = 20;
+                    fb.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.toggle('active', !c.dataset.tag); });
+                    document.querySelectorAll('.js-tag-chip').forEach(function(c){ c.classList.remove('active'); });
+                    document.querySelectorAll('#yearBar .filter-chip').forEach(function(c){ c.classList.toggle('active', !c.dataset.year); });
+                    document.querySelectorAll('#yearCards .year-card').forEach(function(c){ c.classList.toggle('active', !c.dataset.year); });
+                    document.querySelectorAll('#monthJump a').forEach(function(a){ a.classList.remove('mj-dim'); });
+                    dateBadge.classList.remove('visible');
+                    calendarCard.querySelectorAll('.cal-day.active-date').forEach(function(e){ e.classList.remove('active-date'); });
+                    var u = new URL(location);
+                    u.searchParams.delete('tag');
+                    u.searchParams.delete('search');
+                    history.pushState({}, '', u);
+                    filter();
+                });
+            }
+        } else if(empty){
+            empty.remove();
+        }
+        if(q){
+            sc.textContent = '匹配 ' + visibleCount + ' 篇文章';
+            sc.classList.add('visible');
+        } else {
+            sc.classList.remove('visible');
+        }
+        if(window.__afterCalBuild) window.__afterCalBuild();
+        var moreBtn = document.getElementById('dirMore');
+        if(moreBtn){
+            var remaining = cards.length - Math.min(showLimit, cards.length);
+            if(remaining > 0 && !q && !activeTag && !activeDate && !activeYear){
+                moreBtn.style.display = '';
+                moreBtn.textContent = '展开更多文章（剩余 ' + remaining + ' 篇）';
+            } else {
+                moreBtn.style.display = 'none';
+            }
+        }
+    }
+
+    /* 日历标签命中高亮 */
+    window.__afterCalBuild = function(){
+        calendarCard.querySelectorAll('.cal-day.has-post').forEach(function(d){
+            var date = d.dataset.date;
+            var match = !activeTag || Array.prototype.some.call(cards, function(c){
+                return c.dataset.date === date && (c.dataset.tags || '').split(',').indexOf(activeTag) > -1;
+            });
+            d.classList.toggle('tag-match', !!activeTag && match);
+        });
+    };
+
+    /* ── 年份筛选条（JS 生成） ── */
+    (function(){
+        var bar = document.getElementById('yearBar');
+        if(!bar) return;
+        var years = {};
+        cards.forEach(function(c){
+            var y = c.dataset.date ? c.dataset.date.slice(0, 4) : '';
+            if(y) years[y] = (years[y] || 0) + 1;
+        });
+        var sorted = Object.keys(years).sort().reverse();
+        if(sorted.length < 2) return;
+        var urlYear = new URLSearchParams(location.search).get('year');
+        if(urlYear && years[urlYear]) activeYear = urlYear;
+        var all = document.createElement('button');
+        all.className = 'filter-chip active';
+        all.dataset.year = '';
+        all.innerHTML = '全部年份 <span class="count">' + cards.length + '</span>';
+        bar.appendChild(all);
+        sorted.forEach(function(y){
+            var b = document.createElement('button');
+            b.className = 'filter-chip';
+            b.dataset.year = y;
+            b.innerHTML = y + ' 年 <span class="count">' + years[y] + '</span>';
+            bar.appendChild(b);
+        });
+        if(activeYear){
+            bar.querySelectorAll('.filter-chip').forEach(function(c){
+                c.classList.toggle('active', c.dataset.year === activeYear);
+            });
+        }
+        bar.addEventListener('click', function(e){
+            var chip = e.target.closest('.filter-chip');
+            if(!chip) return;
+            bar.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.toggle('active', c === chip); });
+            activeYear = chip.dataset.year || '';
+            /* 月份导航联动：非选中年份置灰 */
+            document.querySelectorAll('#monthJump a').forEach(function(a){
+                if(a.dataset.year){
+                    a.classList.toggle('mj-dim', activeYear && a.dataset.year !== activeYear);
+                }
+            });
+            if(activeYear && window.__calJump){
+                window.__calJump(parseInt(activeYear, 10));
+            }
+            var u = new URL(location);
+            activeYear ? u.searchParams.set('year', activeYear) : u.searchParams.delete('year');
+            history.pushState({}, '', u);
+            filter();
+        });
+    })();
+
+    /* ═══════════ 按年归档卡片 ═══════════ */
+    (function(){
+        var box = document.getElementById('yearCards');
+        if(!box) return;
+        var years = {};
+        cards.forEach(function(c){
+            var y = c.dataset.date ? c.dataset.date.slice(0, 4) : '';
+            if(y) years[y] = (years[y] || 0) + 1;
+        });
+        var sorted = Object.keys(years).sort().reverse();
+        if(!sorted.length) return;
+        var max = Math.max.apply(null, sorted.map(function(y){ return years[y]; }));
+
+        function makeCard(year, label, count, active){
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'year-card' + (active ? ' active' : '');
+            b.dataset.year = year || '';
+            b.setAttribute('aria-pressed', active ? 'true' : 'false');
+            var pct = year ? Math.round(count / max * 100) : 100;
+            b.innerHTML = '<span class="yc-top"><span class="yc-year">' + label + '</span><span class="yc-count">' + count + ' 篇</span></span>' +
+                          '<span class="yc-bar"><i data-w="' + pct + '%"></i></span>';
+            box.appendChild(b);
+        }
+        makeCard('', '全部', cards.length, !activeYear);
+        sorted.forEach(function(y){
+            makeCard(y, y + ' 年', years[y], activeYear === y);
+        });
+
+        /* 入场后柱条生长动画 */
+        setTimeout(function(){
+            box.querySelectorAll('.yc-bar i').forEach(function(barEl){
+                barEl.style.width = barEl.dataset.w;
+            });
+        }, 60);
+
+        box.addEventListener('click', function(e){
+            var card = e.target.closest('.year-card');
+            if(!card) return;
+            box.querySelectorAll('.year-card').forEach(function(c){ c.classList.toggle('active', c === card); });
+            box.querySelectorAll('.year-card').forEach(function(c){ c.setAttribute('aria-pressed', c.classList.contains('active') ? 'true' : 'false'); });
+            activeYear = card.dataset.year || '';
+            /* 同步年份筛选条 */
+            document.querySelectorAll('#yearBar .filter-chip').forEach(function(c){
+                c.classList.toggle('active', c.dataset.year === activeYear);
+            });
+            /* 月份导航联动置灰 */
+            document.querySelectorAll('#monthJump a').forEach(function(a){
+                if(a.dataset.year){
+                    a.classList.toggle('mj-dim', activeYear && a.dataset.year !== activeYear);
+                }
+            });
+            if(activeYear && window.__calJump){
+                window.__calJump(parseInt(activeYear, 10));
+            }
+            var u = new URL(location);
+            activeYear ? u.searchParams.set('year', activeYear) : u.searchParams.delete('year');
+            history.pushState({}, '', u);
+            filter();
+        });
+    })();
+
+    /* 展开更多 */
+    var dirMore = document.getElementById('dirMore');
+    if(dirMore){
+        dirMore.addEventListener('click', function(){
+            showLimit += 20;
+            filter();
+        });
+    }
+
+    si.addEventListener('input', function(){
+        if(clearBtn) clearBtn.classList.toggle('visible', !!si.value.trim());
+        if(si.value.trim()){
+            activeDate = '';
+            dateBadge.classList.remove('visible');
+            calendarCard.querySelectorAll('.cal-day.active-date').forEach(function(e){ e.classList.remove('active-date'); });
+        }
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(function(){
+            var u = new URL(location);
+            var q = si.value.trim();
+            q ? u.searchParams.set('search', q) : u.searchParams.delete('search');
+            history.replaceState({}, '', u);
+        }, 400);
+        filter();
+    });
+    if(clearBtn){
+        clearBtn.addEventListener('click', function(){
+            si.value = '';
+            si.dispatchEvent(new Event('input'));
+            si.focus();
+        });
+    }
+
+    /* 热门搜索建议 */
+    document.querySelectorAll('.ss-chip').forEach(function(chip){
+        chip.addEventListener('click', function(){
+            si.value = chip.dataset.q;
+            si.dispatchEvent(new Event('input'));
+            si.focus();
+        });
+    });
+
+    /* 随机一篇 */
+    var rnd = document.getElementById('dirRandom');
+    if(rnd){
+        rnd.addEventListener('click', function(){
+            var vis = Array.prototype.slice.call(cards).filter(function(c){ return !c.classList.contains('hidden'); });
+            if(!vis.length) vis = Array.prototype.slice.call(cards);
+            var pick = vis[Math.floor(Math.random() * vis.length)];
+            if(pick) location.href = pick.getAttribute('href');
+        });
+    }
+
+    /* 最近搜索（localStorage 记忆，最多 5 条） */
+    (function(){
+        var KEY = 'aurora-recent-searches';
+        var box = document.getElementById('searchHistory');
+        if(!box) return;
+        var chipsWrap = document.getElementById('historyChips');
+        var clearBtn = document.getElementById('historyClear');
+        function load(){
+            try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e){ return []; }
+        }
+        function save(list){
+            try { localStorage.setItem(KEY, JSON.stringify(list)); } catch(e){}
+        }
+        function render(){
+            var list = load();
+            chipsWrap.innerHTML = '';
+            if(!list.length){ box.hidden = true; return; }
+            box.hidden = false;
+            list.forEach(function(q){
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'filter-chip ss-chip';
+                b.textContent = q;
+                b.addEventListener('click', function(){
+                    si.value = q;
+                    si.dispatchEvent(new Event('input'));
+                    si.focus();
+                });
+                chipsWrap.appendChild(b);
+            });
+        }
+        function push(q){
+            q = (q || '').trim();
+            if(!q) return;
+            var list = load().filter(function(x){ return x !== q; });
+            list.unshift(q);
+            save(list.slice(0, 5));
+            render();
+        }
+        if(clearBtn){
+            clearBtn.addEventListener('click', function(){
+                save([]);
+                render();
+            });
+        }
+        si.addEventListener('keydown', function(e){
+            if(e.key === 'Enter' && si.value.trim()) push(si.value);
+        });
+        render();
+    })();
+
+    /* 搜索结果键盘导航：↑/↓ 移动，Enter 打开，Esc 清除 */
+    var kbIdx = -1;
+    function kbVisible(){
+        return Array.prototype.slice.call(cards).filter(function(c){ return !c.classList.contains('hidden'); });
+    }
+    function kbClear(){
+        document.querySelectorAll('.post-card.kb-active').forEach(function(c){ c.classList.remove('kb-active'); });
+        kbIdx = -1;
+    }
+    si.addEventListener('keydown', function(e){
+        var vis = kbVisible();
+        if(!vis.length) return;
+        if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+            e.preventDefault();
+            var cur = kbIdx;
+            kbClear();
+            kbIdx = e.key === 'ArrowDown'
+                ? (cur + 1) % vis.length
+                : (cur - 1 + vis.length) % vis.length;
+            var card = vis[kbIdx];
+            card.classList.add('kb-active');
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            sc.textContent = '选中 ' + (kbIdx + 1) + ' / ' + vis.length + '（Enter 打开）';
+            sc.classList.add('visible');
+        } else if(e.key === 'Enter'){
+            var target = kbIdx >= 0 ? vis[kbIdx] : vis[0];
+            if(target) location.href = target.getAttribute('href');
+        } else if(e.key === 'Escape'){
+            kbClear();
+            filter();
+        } else if(e.key === 'Home'){
+            e.preventDefault();
+            kbClear();
+            kbIdx = 0;
+            var c0 = vis[0];
+            c0.classList.add('kb-active');
+            c0.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            sc.textContent = '选中 1 / ' + vis.length + '（Enter 打开）';
+            sc.classList.add('visible');
+        } else if(e.key === 'End'){
+            e.preventDefault();
+            kbClear();
+            kbIdx = vis.length - 1;
+            var cE = vis[vis.length - 1];
+            cE.classList.add('kb-active');
+            cE.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            sc.textContent = '选中 ' + vis.length + ' / ' + vis.length + '（Enter 打开）';
+            sc.classList.add('visible');
+        }
+    });
+    si.addEventListener('input', kbClear);
+
+    fb.addEventListener('click', function(e){
+        var chip = e.target.closest('.filter-chip');
+        if(!chip) return;
+        var tg = chip.dataset.tag;
+        fb.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.toggle('active', c === chip); });
+        activeTag = tg;
+        /* 同步侧栏标签高亮 */
+        document.querySelectorAll('.js-tag-chip').forEach(function(c){ c.classList.toggle('active', c.dataset.tag === tg); });
+        var u = new URL(location);
+        tg ? u.searchParams.set('tag', tg) : u.searchParams.delete('tag');
+        history.pushState({}, '', u);
+        filter();
+    });
+
+    document.querySelectorAll('.js-tag-chip').forEach(function(chip){
+        chip.addEventListener('click', function(){
+            var tg = chip.dataset.tag;
+            fb.querySelectorAll('.filter-chip').forEach(function(c){
+                c.classList.toggle('active', c.dataset.tag === tg);
+            });
+            document.querySelectorAll('.js-tag-chip').forEach(function(c){
+                c.classList.toggle('active', c === chip);
+            });
+            activeTag = tg;
+            var u = new URL(location);
+            u.searchParams.set('tag', tg);
+            history.pushState({}, '', u);
+            filter();
+        });
+    });
+
+    /* ── 日期筛选徽标 ── */
+    function showDateBadge(dateStr){
+        dateBadge.innerHTML = '📅 正在查看 <strong>' + dateStr + '</strong> 的文章 <button class="clear-date" aria-label="清除日期筛选">✕</button>';
+        dateBadge.classList.add('visible');
+        dateBadge.querySelector('.clear-date').addEventListener('click', function(){
+            activeDate = '';
+            dateBadge.classList.remove('visible');
+            calendarCard.querySelectorAll('.cal-day.active-date').forEach(function(e){ e.classList.remove('active-date'); });
+            var u = new URL(location);
+            u.searchParams.delete('date');
+            history.pushState({}, '', u);
+            filter();
+        });
+    }
+
+    /* ── 日历 ── */
+    (function buildCalendar(){
+        var hasPost = {};
+        postDates.forEach(function(d){ hasPost[d] = true; });
+        var urlDate = new URLSearchParams(location.search).get('date');
+        if(urlDate && hasPost[urlDate]) activeDate = urlDate;
+        var today = new Date();
+        var todayKey = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+        var curY = today.getFullYear(), curM = today.getMonth();
+        var dayNames = ['日','一','二','三','四','五','六'];
+
+        function build(y, m){
+            var postDays = 0;
+            for(var dd = 1; dd <= new Date(y, m+1, 0).getDate(); dd++){
+                var kk = y + '-' + String(m+1).padStart(2,'0') + '-' + String(dd).padStart(2,'0');
+                if(hasPost[kk]) postDays++;
+            }
+            var hdr = '<button id="calPrev" aria-label="上个月">◀</button><span>' + y + '年' + (m+1) + '月' + (postDays ? ' · ' + postDays + ' 天有文章' : '') + '</span><button id="calNext" aria-label="下个月">▶</button>';
+            var grid = '<div class="cal-grid">';
+            dayNames.forEach(function(d){ grid += '<div class="cal-day-hdr">' + d + '</div>'; });
+            var first = new Date(y, m, 1).getDay();
+            var daysIn = new Date(y, m+1, 0).getDate();
+            var prevDays = new Date(y, m, 0).getDate();
+            for(var i = first-1; i >= 0; i--){
+                grid += '<div class="cal-day other-month">' + (prevDays-i) + '</div>';
+            }
+            for(var d = 1; d <= daysIn; d++){
+                var key = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+                var cls = 'cal-day';
+                if(hasPost[key]) cls += ' has-post';
+                if(key === todayKey) cls += ' today';
+                if(key === activeDate) cls += ' active-date';
+                grid += '<div class="' + cls + '" data-date="' + key + '">' + d + '</div>';
+            }
+            var remaining = (7 - (first + daysIn) % 7) % 7;
+            for(var d2 = 1; d2 <= remaining; d2++){
+                grid += '<div class="cal-day other-month">' + d2 + '</div>';
+            }
+            grid += '</div>';
+            calendarCard.innerHTML = '<div class="cal-header">' + hdr + '</div>' + grid;
+            document.getElementById('calPrev').addEventListener('click', function(){
+                curM--; if(curM < 0){ curM = 11; curY--; }
+                build(curY, curM);
+            });
+            document.getElementById('calNext').addEventListener('click', function(){
+                curM++; if(curM > 11){ curM = 0; curY++; }
+                build(curY, curM);
+            });
+            calendarCard.querySelectorAll('.cal-day.has-post').forEach(function(el){
+                el.addEventListener('click', function(){
+                    activeDate = el.dataset.date;
+                    var u = new URL(location);
+                    u.searchParams.set('date', activeDate);
+                    u.searchParams.delete('tag');
+                    u.searchParams.delete('search');
+                    history.pushState({}, '', u);
+                    calendarCard.querySelectorAll('.cal-day.active-date').forEach(function(e){ e.classList.remove('active-date'); });
+                    el.classList.add('active-date');
+                    showDateBadge(activeDate);
+                    fb.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.toggle('active', !c.dataset.tag); });
+                    activeTag = '';
+                    si.value = '';
+                    filter();
+                    setTimeout(function(){
+                        var first = pl.querySelector('.post-card:not(.hidden)');
+                        if(first) first.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                });
+            });
+            if(window.__afterCalBuild) window.__afterCalBuild();
+        }
+        build(curY, curM);
+        if(activeDate && hasPost[activeDate]){
+            showDateBadge(activeDate);
+        }
+        window.__calJump = function(year){
+            curY = year;
+            curM = 0;
+            build(curY, curM);
+        };
+        var todayBtn = document.getElementById('calToday');
+        if(todayBtn){
+            todayBtn.addEventListener('click', function(){
+                curY = today.getFullYear();
+                curM = today.getMonth();
+                build(curY, curM);
+            });
+        }
+    })();
+
+    filter();
+    if(activeYear && window.__calJump){
+        window.__calJump(parseInt(activeYear, 10));
+        document.querySelectorAll('#monthJump a').forEach(function(a){
+            if(a.dataset.year){
+                a.classList.toggle('mj-dim', activeYear && a.dataset.year !== activeYear);
+            }
+        });
+    }
+
+    /* ── 本月发文数 ── */
+    (function(){
+        var el = document.getElementById('monthPostCount');
+        if(!el) return;
+        var now = new Date();
+        var prefix = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+        var n = postDates.filter(function(d){ return d.indexOf(prefix) === 0; }).length;
+        el.textContent = n + ' 篇';
+        var g = document.getElementById('dirGlobal');
+        if(g && window.Viewer && Viewer.getGlobalCount){
+            Viewer.getGlobalCount().then(function(n2){ g.textContent = n2.toLocaleString(); }).catch(function(){ g.textContent = '—'; });
+        }
+    })();
+
+    /* ── 月份导航：从月份分隔线生成 ── */
+    (function(){
+        var box = document.getElementById('monthJump');
+        if(!box) return;
+        var dividers = pl.querySelectorAll('.month-divider');
+        dividers.forEach(function(d){
+            var label = d.querySelector('.month-label');
+            if(!label) return;
+            var count = 0;
+            var el = d.nextElementSibling;
+            while(el && !el.classList.contains('month-divider')){
+                if(el.classList.contains('post-card') && !el.classList.contains('hidden')) count++;
+                el = el.nextElementSibling;
+            }
+            var a = document.createElement('a');
+            a.href = '#';
+            a.innerHTML = '<span>' + label.textContent + '</span><span class="mj-count">' + count + '</span>';
+            var ym = label.textContent.match(/(\d{4})/);
+            if(ym) a.dataset.year = ym[1];
+            a.addEventListener('click', function(e){
+                e.preventDefault();
+                d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            box.appendChild(a);
+        });
+        /* 初始年份参数：月份导航置灰 */
+        if(activeYear){
+            box.querySelectorAll('a').forEach(function(a){
+                if(a.dataset.year) a.classList.toggle('mj-dim', a.dataset.year !== activeYear);
+            });
+        }
+    })();
+
+    /* 浏览器前进/后退：从 URL 恢复筛选状态 */
+    addEventListener('popstate', function(){
+        var params = new URLSearchParams(location.search);
+        var tag = params.get('tag') || '';
+        var year = params.get('year') || '';
+        var date = params.get('date') || '';
+        var search = params.get('search') || '';
+        si.value = search ? decodeURIComponent(search) : '';
+        activeTag = tag;
+        activeYear = year;
+        activeDate = date;
+        fb.querySelectorAll('.filter-chip').forEach(function(c){ c.classList.toggle('active', c.dataset.tag === tag); });
+        document.querySelectorAll('.js-tag-chip').forEach(function(c){ c.classList.toggle('active', c.dataset.tag === tag); });
+        document.querySelectorAll('#yearBar .filter-chip').forEach(function(c){ c.classList.toggle('active', c.dataset.year === year); });
+        document.querySelectorAll('#yearCards .year-card').forEach(function(c){
+            c.classList.toggle('active', c.dataset.year === year);
+            c.setAttribute('aria-pressed', c.dataset.year === year ? 'true' : 'false');
+        });
+        document.querySelectorAll('#monthJump a').forEach(function(a){
+            if(a.dataset.year) a.classList.toggle('mj-dim', year && a.dataset.year !== year);
+        });
+        calendarCard.querySelectorAll('.cal-day.active-date').forEach(function(e){ e.classList.remove('active-date'); });
+        if(date){
+            var el = calendarCard.querySelector('.cal-day[data-date="' + date + '"]');
+            if(el) el.classList.add('active-date');
+            showDateBadge(date);
+        } else {
+            dateBadge.classList.remove('visible');
+        }
+        if(year && window.__calJump) window.__calJump(parseInt(year, 10));
+        showLimit = 20;
+        filter();
+    });
+})();
+</script>
+{% endblock %}

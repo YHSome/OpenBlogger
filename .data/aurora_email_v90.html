@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v3.69 — 更新页仓库双向联动</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 ・ OpenBlogger 模板更新第 90 轮</p>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>侧栏仓库「◎ 只看此仓库」按钮</strong>：仓库分布列表每项新增圆形过滤按钮，点击即过滤时间线到该仓库（如 OpenBlogger → 40 条），并同步筛选条选中态、侧栏高亮，自动滚动到时间线</li>
+      <li><strong>双向联动闭环</strong>：顶部仓库筛选条点击 ↔ 侧栏高亮互相同步（点 Viewer 筛选条 → 侧栏 Viewer 项高亮；点侧栏 ◎ → 筛选条选中），与事件类型筛选可继续叠加</li>
+      <li><strong>仓库列表结构重构</strong>：仓库名+计数改为独立链接（.repo-link 新标签打开仓库），过滤按钮独立成行内圆形按钮，语义更清晰、键盘可访问</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 全站回归（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>0 控制台错误 / 0 页面异常；7 个主页面全部无横向溢出</li>
+      <li>专项验证：点侧栏 OpenBlogger ◎ → 时间线剩 40 条且全部为该仓库、筛选条选中 OpenBlogger、侧栏 1 项高亮、结果文本正确；点筛选条 Viewer → 25 条、侧栏高亮 Viewer；11 个仓库项全部含独立链接与过滤按钮</li>
+      <li>既有 82-89 轮功能全部回归通过</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">3. 问题与解决</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>原仓库项是整块 <a> 链接，无法内嵌过滤按钮（嵌套交互元素不合法）；重构为 div + 独立链接 + 独立按钮，并同步修正活跃度图点击跳转的 href 取值逻辑</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">4. 文件改动</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>template/Aurora/Updates.html：仓库列表结构重构 + ◎ 按钮样式 + 双向同步逻辑（window.__tlFilter 接口 + applyFilter 侧栏高亮）</li>
+      <li>README.md：更新动态特性行同步更新</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">5. 下一步建议</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>目录页搜索建议加入 localStorage 历史记忆</li>
+      <li>首页新增最近更新动态横向滚动条</li>
+      <li>文章页顶部增加面包屑导航</li>
+    </ul>
+  </div>
+</body>
+</html>

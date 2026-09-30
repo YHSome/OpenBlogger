@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v3.8 — 正文结构与交互细节</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 29 轮</p>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>文章正文 · 标题自动编号</strong>：h2/h3 自动显示层级编号（1. / 1.1），长文结构更清晰；编号仅出现在正文，目录保持纯净文字</li>
+      <li><strong>移动菜单 · ESC 关闭</strong>：按 ESC 收起菜单并把焦点还给汉堡按钮（键盘用户流畅操作）</li>
+      <li><strong>资源页 · 项目主题标签支持</strong>：渲染器新增 topics 字段透传，模板已准备 #主题 chips 样式——当前 projects.json 数据未含 topics，数据就绪后自动展示</li>
+    </ul>
+
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>h2/h3 编号规则已应用（counter 表达式正确注入）</li>
+      <li>ESC：菜单关闭 + 焦点回到汉堡按钮（实测通过）</li>
+      <li>topics 渲染管线就绪（卡片样式 + 数据字段贯通）</li>
+      <li>全站 0 控制台错误</li>
+    </ul>
+  </div>
+</body>
+</html>

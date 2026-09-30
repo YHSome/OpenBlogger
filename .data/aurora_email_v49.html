@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh">
+<body style="margin:0;padding:0;background:#f4f5f7;font-family:'Segoe UI','Microsoft YaHei',sans-serif;">
+  <div style="max-width:680px;margin:24px auto;background:#ffffff;border-radius:12px;padding:24px 28px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+    <h2 style="margin:0 0 4px;color:#1a1a1a;">✨ Aurora 主题 v3.28 — 状态一致性</h2>
+    <p style="margin:0 0 16px;color:#666;font-size:13px;">2026-08-14 · OpenBlogger 模板更新第 49 轮</p>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">1. 本轮新增/优化的组件</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li><strong>移动菜单滚动锁定</strong>：菜单打开时背景禁止滚动，关闭后恢复，避免误操作</li>
+      <li><strong>更新页状态一致性</strong>：事件类型筛选激活时点击仓库导航，自动清除筛选确保目标仓库可见（实测清除后显示 216 条）</li>
+      <li><strong>标签手风琴 resize 修正</strong>：窗口尺寸变化时自动重算已展开分区高度，不再出现内容被裁切</li>
+    </ul>
+    <h3 style="margin:18px 0 6px;color:#0b57d0;">2. 验证结果（Playwright 自动化）</h3>
+    <ul style="margin:0;padding-left:20px;color:#333;line-height:1.7;">
+      <li>菜单开/关时 body overflow 在 hidden/空 间切换</li>
+      <li>仓库点击后类型筛选清零、目标仓库可见</li>
+      <li>resize 后手风琴展开高度保持</li>
+      <li>全站 0 控制台错误</li>
+    </ul>
+  </div>
+</body>
+</html>
